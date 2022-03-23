@@ -52,6 +52,11 @@ EFFICIENT_VERSIONS = {
 
 PRETRAINED = "pretrained"
 
+#yzx +
+VGG = {
+    "vgg16": applications.VGG16,
+    "vgg19": applications.VGG19,
+}
 
 class DenseBlock(block_module.Block):
     """Block for Dense layers.
@@ -652,6 +657,18 @@ class KerasApplicationBlock(block_module.Block):
             )
 
         return model(input_node)
+
+
+
+#yzx +
+class VGGBlock(KerasApplicationBlock):
+    def __init__(self, pretrained: Optional[bool] = None, **kwargs):
+        super().__init__(
+            pretrained=pretrained,
+            models=VGG,
+            min_size=32,
+            **kwargs,
+        )
 
 
 class ResNetBlock(KerasApplicationBlock):
