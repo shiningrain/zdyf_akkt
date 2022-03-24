@@ -18,7 +18,7 @@ You can change the `--tuner` in demo_0.py to assign the tuner in search. The usa
 ## TODO
 - [ ] 加入更多的模型支持
   - [x]  VGG
-  - [ ]  NASNet
+  - [ ]  ViT (transformer)
   - [ ]  待定（可选）
 - [ ] 加入更多超参数用于自动化生成模型，拓展可搜索模型空间
   - [ ] Activation
