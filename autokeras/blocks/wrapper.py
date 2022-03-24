@@ -81,7 +81,6 @@ class ImageBlock(block_module.Block):
         elif block_type == VANILLA:
             return basic.ConvBlock().build(hp, output_node)
         elif block_type == EFFICIENT:
-        elif block_type == EFFICIENT:
             return basic.EfficientNetBlock().build(hp, output_node)
         # yzx +
         elif block_type == VGG:
