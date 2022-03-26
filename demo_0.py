@@ -37,13 +37,12 @@ def format_example(image, label,image_size=IMAGE_SIZE):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test image classification')
-    parser.add_argument('--data','-d',default='cifar100',choices=['cars','cifar100','food','cars','tiny'], help='dataset')
-    parser.add_argument('--origin_path','-op',default='./Test_dir/demo_origin/param_c100_test.pkl', help='orgin model architecture path')#./Test_dir/tmp_hp.pkl./Test_dir/demo_origin/param_x_trainable.pkl./Test_dir/demo_origin/param_efficient7_trainable.pkl
+    parser.add_argument('--data','-d',default='mnist',choices=['cifar','mnist','cars','cifar100','food','cars','tiny'], help='dataset')
     parser.add_argument('--result_root_path','-rrp',default='./Test_dir/demo_result', help='the directory to save results')
     parser.add_argument('--tmp_dir','-td',default='./Test_dir/tmp0', help='the directory to save results')    
     parser.add_argument('--epoch','-ep',default=1, help='training epoch')
-    parser.add_argument('--trials','-tr',default=50, help='searching trials')
-    parser.add_argument('--tuner','-tn',default='greedy',choices=['greedy','dream','bayesian','hyperband'], help='searching trials')
+    parser.add_argument('--trials','-tr',default=5, help='searching trials')
+    parser.add_argument('--tuner','-tn',default='dream',choices=['greedy','dream','bayesian','hyperband'], help='searching trials')
     
     args = parser.parse_args()
 
@@ -61,13 +60,16 @@ if __name__ == '__main__':
     # load datasets
     if args.data=='cifar100':
         (x_train, y_train), (x_test, y_test)=cifar100_load_data()
+    elif args.data=='cifar':
+        (x_train, y_train), (x_test, y_test)=cifar10_load_data()
+    elif args.data=='mnist':
+        (x_train, y_train), (x_test, y_test)=mnist_load_data()
 
     # initialize the search log
     if not os.path.exists(log_path):
         log_dict={}
         log_dict['cur_trial']=-1
         log_dict['start_time']=time.time()
-        log_dict['param_path']=os.path.abspath(args.origin_path)
         log_dict['data']=args.data
         log_dict['tmp_dir']=args.tmp_dir
 
