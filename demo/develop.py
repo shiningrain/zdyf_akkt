@@ -1,12 +1,6 @@
-'''
-Author: your name
-Date: 2022-03-19 20:43:15
-LastEditTime: 2022-03-19 21:32:25
-LastEditors: Please set LastEditors
-Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
-FilePath: /ak_test/demo1.py
-'''
 import os
+import shutil
+import time
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.datasets import mnist,cifar10
@@ -56,8 +50,17 @@ def model_generate(
     trial=1,
     param_path='./param.pkl',
 ):
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+
+        
+    root_path=save_dir
+    tmp_dir=os.path.join(os.path.dirname(root_path),'tmp')
+    if os.path.exists(root_path):
+        shutil.rmtree(root_path)
+    if os.path.exists(tmp_dir):
+        shutil.rmtree(tmp_dir)
+    os.makedirs(root_path)
+    os.makedirs(tmp_dir)
+    log_path=os.path.join(root_path,'log.pkl')
     
     if data=='mnist':
         (x_train, y_train), (x_test, y_test) = mnist_load_data()
@@ -68,6 +71,28 @@ def model_generate(
 
     # DEMO:1
     if search:
+        
+        # initialize the search log
+        if not os.path.exists(log_path):
+            log_dict={}
+            log_dict['cur_trial']=-1
+            log_dict['start_time']=time.time()
+            log_dict['data']=data
+            log_dict['tmp_dir']=tmp_dir
+
+            with open(log_path, 'wb') as f:
+                pickle.dump(log_dict, f)
+
+        else:
+            with open(log_path, 'rb') as f:
+                log_dict = pickle.load(f)
+            for key in log_dict.keys():
+                if key.startswith('{}-'.format(log_dict['cur_trial'])):
+                    log_dict['start_time']=time.time()-log_dict[key]['time']
+                    break
+            with open(log_path, 'wb') as f:
+                pickle.dump(log_dict, f)
+        
         input_node = ak.ImageInput()
         output_node = ak.ImageBlock(
             # Only search ResNet architectures.
@@ -80,14 +105,16 @@ def model_generate(
             outputs=output_node,
             overwrite=True, 
             max_trials=trial,
-            directory=save_dir,
+            directory=os.path.join(root_path,'image_classifier'),
             tuner=tuner,
             
         )
-        clf.fit(x_train, y_train, epochs=epoch)
-
-        model = clf.export_model()
+        clf.fit(x_train, y_train, epochs=epoch,root_path=root_path)
         
+        model_path=os.path.join(root_path,'best_model.h5')
+        if not os.path.exists(model_path):
+            model = clf.export_model()
+            model.save(model_path)
     else:
         # DEMO 2
         with open('./hypermodel.pkl', 'rb') as f:
@@ -101,72 +128,7 @@ def model_generate(
         model=hm.build(model_hyperparameter) #the model will be build by autokeras with this parameter 
         print(1)
         
-    model.save(os.path.join(save_dir,'model-demo1.h5'))
+        model.save(os.path.join(root_path,'best_model.h5'))
 
 
-    # loaded_model = load_model(os.path.join(args.save_dir,'model.h5'), custom_objects=ak.CUSTOM_OBJECTS)
-    # predicted_y = loaded_model.predict(tf.expand_dims(x_test))
-    # print(predicted_y)
-    print('finish')
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Demo, search model or build model')
-    parser.add_argument('-block_type','-blk',default='resnet',choices=['efficientnet','resnet','xception','valinia'], help='model architecture') # TODO: VGG,nasnet,lenet
-    parser.add_argument('-search','-s',default=True, help='True will search model, False will build model from parameter')
-    parser.add_argument('-data','-d',default='mnist',choices=['cifar','mnist'], help='dataset')
-    parser.add_argument('-save_dir','-sd',default='./result', help='model save directory')
-    parser.add_argument('-epoch','-ep',default=2, help='maximum training epoch')
-    parser.add_argument('-tuner','-tn',default='greedy', help='ONLY when -s=True, search tuner')
-    parser.add_argument('-trial','-tr',default=1, help='ONLY when -s=True, search trial')
-    parser.add_argument('-param_path','-pp',default='./param.pkl', help='ONLY when -s=False, the model parameter path, a dict saved as pickle')
-    args = parser.parse_args()
-
-    if not os.path.exists(args.save_dir):
-        os.makedirs(args.save_dir)
-    
-    if args.data=='mnist':
-        (x_train, y_train), (x_test, y_test) = mnist_load_data()
-    elif args.data=='cifar':
-        (x_train, y_train), (x_test, y_test) = cifar10_load_data()
-
-    # DEMO:1
-    if args.search:
-        input_node = ak.ImageInput()
-        output_node = ak.ImageBlock(
-            # Only search ResNet architectures.
-            block_type=args.block_type,
-        )(input_node)
-        output_node = ak.ClassificationHead()(output_node)
-        clf = ak.AutoModel(
-            inputs=input_node,
-            outputs=output_node,
-            overwrite=True, 
-            max_trials=args.trial,
-            directory=args.save_dir,
-            tuner=args.tuner,
-            
-        )
-        clf.fit(x_train, y_train, epochs=args.epoch)
-
-        model = clf.export_model()
-        
-    else:
-        # DEMO 2
-        with open('./hypermodel.pkl', 'rb') as f:
-            hm = pickle.load(f)
-        with open('./hyperparam.pkl', 'rb') as f: #you need to input the parameter of the model here
-            model_hyperparameter = pickle.load(f)
-        with open(args.param_path, 'rb') as f: #you need to input the parameter of the model here
-            param = pickle.load(f)
-        model_hyperparameter.values=param
-
-        model=hm.build(model_hyperparameter) #the model will be build by autokeras with this parameter 
-        print(1)
-        
-    model.save(os.path.join(args.save_dir,'model-demo1.h5'))
-
-
-    # loaded_model = load_model(os.path.join(args.save_dir,'model.h5'), custom_objects=ak.CUSTOM_OBJECTS)
-    # predicted_y = loaded_model.predict(tf.expand_dims(x_test))
-    # print(predicted_y)
     print('finish')

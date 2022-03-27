@@ -1,10 +1,11 @@
 import os
-from develop import model_generate
 import json
 
 
 
 def run(params):
+    os.environ["CUDA_VISIBLE_DEVICES"] = params['gpu']
+    from develop import model_generate
     if params['search']:
         model_generate(
             block_type=params['block_type'],
@@ -30,9 +31,10 @@ if __name__=='__main__':
         'search':True,
         'data':'mnist',
         'save_dir':'./result',
-        'epoch':2,
-        'tuner':'greedy',
-        'trial':1,
+        'epoch':3,
+        'tuner':'dream',
+        'trial':3,
+        'gpu':'1',
     }
     test_param_2={
         'block_type':'resnet',
@@ -41,7 +43,8 @@ if __name__=='__main__':
         'save_dir':'./result',
         'epoch':2,
         'param_path':'./param.pkl',
+        'gpu':'0',
     }
     
-    # run(test_param_1)
-    run(test_param_2)
+    run(test_param_1)
+    # run(test_param_2)
