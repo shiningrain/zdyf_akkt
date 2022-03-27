@@ -23,8 +23,8 @@ You can change the `--tuner` in demo_0.py to assign the tuner in search. The usa
 - [ ] 加入更多超参数用于自动化生成模型，拓展可搜索模型空间
   - [ ] Activation
   - [ ] Initializer
-- [ ] 构建简单的上层api
-  - [ ] 整理Demo
-  - [ ] 训练记录与对应输出接口
+- [x] 构建简单的上层api
+  - [x] 整理Demo
+  - [x] 训练记录与对应输出接口
 - [x] 将我们已有的模型搜索方法集成进去
   - [x] DREAM search
