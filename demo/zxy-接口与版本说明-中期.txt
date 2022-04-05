@@ -1,6 +1,6 @@
 前端输入接口：dict格式
 
-1. 模型种类'block_type'。[efficientnet，resnet，xception，valinia，VGG，nasnet，lenet]
+1. 模型种类'block_type'。['efficient'，'resnet'，'xception'，'valinia'，'vgg']# 待补充：nasnet
 2. 自动化构造模型'search'。自动化根据模型种类构建性能优秀的模型。 True or False
 3. 数据集'data'（经过增强或者未经增强的数据集，cifar或mnist），str格式，如果是我们自己的数据集的话，请把路径写在这里，到时候我们的功能会从路径里读数据。
 4. 模型存储目录'save_dir'，所有输出和中间结果都会存在这个目录里
