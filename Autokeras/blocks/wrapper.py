@@ -33,6 +33,8 @@ MAX_TOKENS = "max_tokens"
 NGRAM = "ngram"
 BERT = "bert"
 VGG = "vgg"
+NASNET = "nasnet"
+DENSENET = "densenet"
 
 
 class ImageBlock(block_module.Block):
@@ -85,6 +87,10 @@ class ImageBlock(block_module.Block):
         # yzx +
         elif block_type == VGG:
             return basic.VGGBlock().build(hp, output_node)
+        elif block_type == NASNET:
+            return basic.NASNetBlock().build(hp, output_node)
+        elif block_type == DENSENET:
+            return basic.DenseNetBlock().build(hp, output_node)
 
     def build(self, hp, inputs=None):
         input_node = nest.flatten(inputs)[0]
@@ -106,7 +112,7 @@ class ImageBlock(block_module.Block):
 
         if self.block_type is None:
             block_type = hp.Choice(
-                BLOCK_TYPE, [RESNET, XCEPTION, VANILLA, EFFICIENT, VGG]
+                BLOCK_TYPE, [RESNET, XCEPTION, VANILLA, EFFICIENT, VGG, NASNET, DENSENET]
             )
             with hp.conditional_scope(BLOCK_TYPE, [block_type]):
                 output_node = self._build_block(hp, output_node, block_type)

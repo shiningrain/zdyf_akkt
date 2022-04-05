@@ -58,6 +58,20 @@ VGG = {
     "vgg19": applications.VGG19,
 }
 
+NASNET_M = {
+    "mobile": applications.nasnet.NASNetMobile,
+}
+
+NASNET_L = {
+    "large": applications.nasnet.NASNetLarge,
+}
+
+DENSENET = {
+    "densenet121": applications.DenseNet121,
+    "densenet169": applications.DenseNet169,
+    "densenet201": applications.DenseNet201,
+}
+
 class DenseBlock(block_module.Block):
     """Block for Dense layers.
 
@@ -666,6 +680,42 @@ class VGGBlock(KerasApplicationBlock):
         super().__init__(
             pretrained=pretrained,
             models=VGG,
+            min_size=32,
+            **kwargs,
+        )
+
+
+class NASNetBlock(KerasApplicationBlock):
+    def __init__(
+            self,
+            version: Optional[str] = None,
+            pretrained: Optional[bool] = None,
+            **kwargs,
+    ):
+        if version is None:
+            models = {**NASNET_L, **NASNET_M}
+        elif version == "large":
+            models = NASNET_L
+        elif version == "mobile":
+            models = NASNET_M
+        else:
+            raise ValueError(
+                'Expect version to be "large", or "mobile", but got '
+                "{version}.".format(version=version))
+        super().__init__(pretrained=pretrained, models=models, min_size=32, **kwargs)
+        self.version = version
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"version": self.version})
+        return config
+
+
+class DenseNetBlock(KerasApplicationBlock):
+    def __init__(self, pretrained: Optional[bool] = None, **kwargs):
+        super().__init__(
+            pretrained=pretrained,
+            models=DENSENET,
             min_size=32,
             **kwargs,
         )
