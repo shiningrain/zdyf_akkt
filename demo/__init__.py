@@ -1,6 +1,7 @@
 import os
 import json
-
+import sys
+sys.path.append(os.path.dirname(__file__))
 
 
 def run(params):
