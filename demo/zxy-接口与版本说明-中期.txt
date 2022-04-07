@@ -7,7 +7,7 @@
 5. 模型训练epoch上限'epoch'，默认为200， 用户可不选
 
 TRUE: # 对应demo1
-	1. 模型搜索方法'tuner'。当自动化构造模型为False时可选，[OUR, Greedy, Random, Bayesian, Hyperband]。随机出事种子并开始自动化搜索模型。  用户可不选
+	1. 模型搜索方法'tuner'。当自动化构造模型为False时可选，['dream', 'greedy', 'random', 'bayesian', 'hyperband']。随机出事种子并开始自动化搜索模型。  用户可不选
 	2. 模型搜索次数上限'trial'，默认为50。  用户可不选
 
 FALSE：# 对应demo2
