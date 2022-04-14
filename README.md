@@ -16,10 +16,11 @@ You can change the `--tuner` in demo_0.py to assign the tuner in search. The usa
 
 
 ## TODO
-- [ ] 加入更多的模型支持
+- [ ] 加入更多的模型支持（目前支持VGG、NasNet、DenseNet、EfficientNet、ResNet、CNN、Xception，总计7种网络架构）
   - [x]  VGG
+  - [x]  NasNet
+  - [x]  DenseNet
   - [ ]  ViT (transformer)——只有最新版本TensorFlow可以用transformer网络，目前考虑后续兼容框架测试使用的是2.3的TensorFlow
-  - [ ]  待定（可选）
 - [ ] 加入更多超参数用于自动化生成模型，拓展可搜索模型空间
   - [ ] Activation
   - [ ] Initializer
