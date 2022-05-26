@@ -8,6 +8,8 @@ import argparse
 import autokeras as ak
 import pickle
 import tensorflow.keras as keras
+from ..Deepalchemy import deepalchemy as da
+
 
 def mnist_load_data():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -92,29 +94,41 @@ def model_generate(
                     break
             with open(log_path, 'wb') as f:
                 pickle.dump(log_dict, f)
-        
-        input_node = ak.ImageInput()
-        output_node = ak.ImageBlock(
-            # Only search ResNet architectures.
-            normalize=True,
-            block_type=block_type,
-        )(input_node)
-        output_node = ak.ClassificationHead()(output_node)
-        clf = ak.AutoModel(
-            inputs=input_node,
-            outputs=output_node,
-            overwrite=True, 
-            max_trials=trial,
-            directory=os.path.join(root_path,'image_classifier'),
-            tuner=tuner,
-            
-        )
-        clf.fit(x_train, y_train, epochs=epoch,root_path=root_path)
-        
-        model_path=os.path.join(root_path,'best_model.h5')
-        if not os.path.exists(model_path):
-            model = clf.export_model()
-            model.save(model_path)
+
+        #Dream and other based on AK
+        if tuner != 'deepalchemy':
+            input_node = ak.ImageInput()
+            output_node = ak.ImageBlock(
+                # Only search ResNet architectures.
+                normalize=True,
+                block_type=block_type,
+            )(input_node)
+            output_node = ak.ClassificationHead()(output_node)
+            clf = ak.AutoModel(
+                inputs=input_node,
+                outputs=output_node,
+                overwrite=True,
+                max_trials=trial,
+                directory=os.path.join(root_path,'image_classifier'),
+                tuner=tuner,
+
+            )
+            clf.fit(x_train, y_train, epochs=epoch,root_path=root_path)
+
+            model_path=os.path.join(root_path,'best_model.h5')
+            if not os.path.exists(model_path):
+                model = clf.export_model()
+                model.save(model_path)
+        else:
+            #yzx+ deepalchemy
+            trainfunc, nmax = da.gen_train_function(False, [x_train, y_train, x_test, y_test], False, '0', epoch, data)
+            wmin, wmax, dmin, dmax = da.NM_search_min(trainfunc, nmax, 'normal', 4)
+
+            trainfunc, nmax = da.gen_train_function(True, [x_train, y_train, x_test, y_test], False, '0', epoch, data)
+            model_path = os.path.join(root_path, 'best_model.h5')
+            valloss = trainfunc(dmin, dmax, wmin, wmax)
+            shutil.copyfile("./best.h5",model_path)
+
     else:
         # DEMO 2
         with open('./hypermodel.pkl', 'rb') as f:

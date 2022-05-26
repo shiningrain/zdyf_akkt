@@ -15,6 +15,7 @@ import time
 import argparse
 import autokeras as ak
 import shutil
+from .Deepalchemy import deepalchemy as da
 
 
 IMAGE_SIZE=300# food101
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('--tmp_dir','-td',default='./Test_dir/tmp0', help='the directory to save results')    
     parser.add_argument('--epoch','-ep',default=1, help='training epoch')
     parser.add_argument('--trials','-tr',default=5, help='searching trials')
-    parser.add_argument('--tuner','-tn',default='dream',choices=['greedy','dream','bayesian','hyperband'], help='searching trials')
+    parser.add_argument('--tuner','-tn',default='dream',choices=['greedy','dream','bayesian','hyperband','deepalchemy'], help='searching trials')
     
     args = parser.parse_args()
 
@@ -88,18 +89,27 @@ if __name__ == '__main__':
 
     # search models, if you have finished the `setup` in readme.md, the greedy
     # method is our feedback-based search method.
-    clf = ak.ImageClassifier(
-    overwrite=True,directory=os.path.join(args.result_root_path,'image_classifier'),
-    max_trials=args.trials,tuner=args.tuner)#,tuner='bayesian'
-    
 
     if args.epoch!=None:
         epoch=int(args.epoch)
     else:
         epoch=args.epoch
 
-    # load the tfds datasets and feed the image classifier with training data.
-    clf.fit(x_train, y_train, epochs=epoch,root_path=root_path)
+
+    if args.tuner != 'deepalchemy':
+        clf = ak.ImageClassifier(
+        overwrite=True,directory=os.path.join(args.result_root_path,'image_classifier'),
+        max_trials=args.trials,tuner=args.tuner)#,tuner='bayesian'
+
+        # load the tfds datasets and feed the image classifier with training data.
+        clf.fit(x_train, y_train, epochs=epoch,root_path=root_path)
+
+    else:
+        trainfunc, nmax = da.gen_train_function(False, [x_train, y_train, x_test, y_test], False, '0', epoch)
+        wmin, wmax, dmin, dmax = da.NM_search_min(trainfunc, nmax, 'normal', 4)
+
+        trainfunc, nmax = da.gen_train_function(True, [x_train, y_train, x_test, y_test], False, '0', epoch)
+        valloss = trainfunc(dmin, dmax, wmin, wmax)
 
 
     print('finish')
