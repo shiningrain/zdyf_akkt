@@ -3,7 +3,6 @@ import json
 import sys
 sys.path.append(os.path.dirname(__file__))
 
-
 def run(params):
     os.environ["CUDA_VISIBLE_DEVICES"] = params['gpu']
     from develop import model_generate
@@ -27,16 +26,16 @@ def run(params):
         
 
 if __name__=='__main__':
-    test_param_1={
-        'block_type':'resnet',
-        'search':True,
-        'data':'mnist',
-        'save_dir':'./result',
-        'epoch':3,
-        'tuner':'dream',
-        'trial':3,
-        'gpu':'1',
-    }
+    # test_param_1={
+    #     'block_type':'resnet',
+    #     'search':True,
+    #     'data':'mnist',
+    #     'save_dir':'./result',
+    #     'epoch':3,
+    #     'tuner':'dream',
+    #     'trial':3,
+    #     'gpu':'1',
+    # }
     test_param_2={
         'block_type':'resnet',
         'search':False,
@@ -47,5 +46,6 @@ if __name__=='__main__':
         'gpu':'0',
     }
     
-    run(test_param_1)
-    # run(test_param_2)
+    
+    # run(test_param_1)
+    run(test_param_2)

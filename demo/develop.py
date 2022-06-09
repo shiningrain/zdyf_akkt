@@ -8,7 +8,9 @@ import argparse
 import autokeras as ak
 import pickle
 import tensorflow.keras as keras
-from ..Deepalchemy import deepalchemy as da
+import sys
+sys.path.append("..")
+from Deepalchemy import deepalchemy as da
 
 
 def mnist_load_data():
@@ -146,3 +148,45 @@ def model_generate(
 
 
     print('finish')
+    
+def onnx_convert(model_path,save_dir):
+    import keras2onnx
+    from tensorflow.keras.models import load_model
+    import autokeras as ak
+    import onnx
+
+    # try:
+    #     model=load_model(model_path)
+    # except:
+    model=load_model(model_path,custom_objects=ak.CUSTOM_OBJECTS)
+    onnx_model = keras2onnx.convert_keras(model,'autokeras')
+    onnx_path=os.path.join(save_dir,'model.onnx')
+    onnx.save_model(onnx_model, onnx_path)
+    return onnx_path
+    
+def torch_convert(model_path,save_dir):
+    onnx_path=onnx_convert(model_path,save_dir)
+    from onnx_pytorch import code_gen
+    torch_model_dir=os.path.join(save_dir,'torch_model')
+    os.makedirs(torch_model_dir)
+    code_gen.gen(onnx_path, torch_model_dir)
+    return os.path.join(torch_model_dir,'model.py')
+    
+def paddle_convert(model_path,save_dir):
+    onnx_path=onnx_convert(model_path,save_dir)
+    paddle_model_dir=os.path.join(save_dir,'paddle_model')
+    params_command='source activate tf2.3; x2paddle --framework=onnx --model={} --save_dir={}'
+    print('==========start converting============')
+    import subprocess
+    out_path=os.path.join(save_dir,'out')
+    out_file = open(out_path, 'w')
+    out_file.write('logs\n')
+    run_cmd=params_command.format(onnx_path,paddle_model_dir)
+    p=subprocess.Popen(run_cmd, shell=True, stdout=out_file, stderr=out_file, executable='/bin/bash')
+    # try:
+    #     os.system(os_command)
+    # except:
+    #     os._exit(0)
+    print('=============finished converting===========')
+    paddle_model_path=os.path.join(paddle_model_dir,'inference_model/model.pdmodel')
+    return paddle_model_path

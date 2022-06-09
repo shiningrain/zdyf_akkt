@@ -1,9 +1,10 @@
 import sys
-from ..Deepalchemy import new_evaluation as eva
+sys.path.append("..")
+from Deepalchemy import new_evaluation as eva
 import tensorflow as tf
 import numpy as np
 #import myModel
-from ..Deepalchemy import myModel
+from Deepalchemy import myModel
 import time
 import os
 import argparse
