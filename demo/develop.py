@@ -334,6 +334,10 @@ def paddle_convert(model_path,save_dir):
     #     os.system(os_command)
     # except:
     #     os._exit(0)
+<<<<<<< HEAD
     print('=============Finished Converting===========')
+=======
+    print('=============finished converting===========')
+>>>>>>> e33055cfc7756215769bc7e6ea0754d966a27f21
     paddle_model_path=os.path.join(paddle_model_dir,'inference_model/model.pdmodel')
     return paddle_model_path
