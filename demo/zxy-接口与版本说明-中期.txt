@@ -25,3 +25,16 @@ Python 3.6.9           	#3.6.9是考虑和框架测试结合，如果其他人�
 TensorFlow 2.3
 AutoKeras 1.0.12
 Kerastuner 1.0.2
+
+/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/zxy-接口与版本说明-中期.txt
+模型转换接口说明：
+#待补充
+
+模型转换测试：
+|model|pytorch|paddle|
+|resnet|T|T|
+|xception|F|F| # globalmaxpool 层不支持转换
+|efficient|||
+|vgg|||
+|valinia|||
+|valinia|||

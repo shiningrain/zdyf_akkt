@@ -1,17 +1,75 @@
 import os
 import shutil
 import time
+import copy
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.datasets import mnist,cifar10
+from tensorflow.keras.models import load_model,Model
+from tensorflow.keras import layers 
+import tensorflow.keras as keras
 import argparse
 import autokeras as ak
 import pickle
 import tensorflow.keras as keras
-from ..Deepalchemy import deepalchemy as da
+import sys
+sys.path.append("..")
+from Deepalchemy import deepalchemy as da
 
 
-def mnist_load_data():
+def save_data(x_train,x_test,y_train,y_test,save_path):
+    dataset={}
+    dataset['x_train']=x_train.numpy()
+    dataset['x_test']=x_test.numpy()
+    dataset['y_train']=y_train
+    dataset['y_test']=y_test
+    with open(save_path, 'wb') as f:
+        pickle.dump(dataset, f)
+
+def normalize_save_data(image,normalize_model,new_data_save_path):
+    save_dir=os.path.dirname(new_data_save_path)
+    if normalize_model==None:
+        write_path=os.path.join(save_dir,'normalize')
+        if not os.path.exists(write_path):
+            f = open(write_path, 'w')
+            f.write('empty normalization !')
+            f.close()
+        return image
+    image=normalize_model(image)
+    
+    # initialize the normalize model after process the data
+    normalize_path=os.path.join(save_dir,'normalize.h5')
+    if not os.path.exists(normalize_path):
+        normalize_model.save(normalize_path)
+    return image
+
+def resize_image(image,normalize_model,new_data_save_path,input_shape):
+    # only consider 3 dimension data
+    if len(input_shape)==4:
+        IMG_SIZE=[input_shape[1],input_shape[2]]
+        concatenate_length=int(input_shape[3]/image.shape[3])
+    else:
+        print('error, check input data shape')
+        os._exit(0)
+        
+    image_result=None
+    for i in range(int(image.shape[0]/1000)):
+        normalize_image=normalize_save_data(image[i*1000:(i+1)*1000,...],normalize_model,new_data_save_path)
+        new_image=tf.image.resize(normalize_image, IMG_SIZE)
+        if image_result==None:
+            image_result=new_image
+        else:
+            image_result=tf.concat([image_result,new_image],axis=0)
+    if concatenate_length>1:
+        concatenate_list=[]
+        for i in range(concatenate_length):
+            concatenate_list.append(image_result)
+        result=tf.keras.layers.concatenate(concatenate_list,axis=-1)
+    else:
+        result=image_result
+    return result
+
+def mnist_load_data(normalize_model=None,new_model_input=None,new_data_save_path=None):
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     # x_train = x_train.reshape(60000, 784)
     # x_test = x_test.reshape(10000, 784)
@@ -23,10 +81,19 @@ def mnist_load_data():
     print(x_test.shape[0], 'test samples')
     y_train = keras.utils.to_categorical(y_train, 10)
     y_test = keras.utils.to_categorical(y_test, 10)
+    
+    if new_data_save_path!=None:
+        x_train = x_train.reshape(-1, 28,28,1)
+        x_test = x_test.reshape(-1, 28,28,1)
+        
+        new_x_test=resize_image(x_test,normalize_model,new_data_save_path,input_shape=new_model_input)
+        new_x_train=resize_image(x_train,normalize_model,new_data_save_path,input_shape=new_model_input)
+        save_data(new_x_train,new_x_test,y_train,y_test,new_data_save_path)
+    
     return (x_train, y_train), (x_test, y_test)
 
 
-def cifar10_load_data():
+def cifar10_load_data(normalize_model=None,new_model_input=None,new_data_save_path=None):
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     y_train = y_train.ravel()
     y_test = y_test.ravel()
@@ -39,6 +106,12 @@ def cifar10_load_data():
         x_train[:, :, :, i] = (x_train[:, :, :, i] - mean[i]) / std[i]
     y_train = keras.utils.to_categorical(y_train, 10)
     y_test = keras.utils.to_categorical(y_test, 10)
+    
+    if new_data_save_path!=None:      
+        new_x_test=resize_image(x_test,normalize_model,new_data_save_path,input_shape=new_model_input)
+        new_x_train=resize_image(x_train,normalize_model,new_data_save_path,input_shape=new_model_input)
+        save_data(new_x_train,new_x_test,y_train,y_test,new_data_save_path)
+    
     return (x_train, y_train), (x_test, y_test)
 
 
@@ -143,6 +216,124 @@ def model_generate(
         print(1)
         
         model.save(os.path.join(root_path,'best_model.h5'))
+        # model.save(os.path.join(root_path,'best_model'))
 
 
     print('finish')
+
+def extract_main_layers(origin_model_path,save_dir):
+    save_path=os.path.join(save_dir,'extract_model.h5')
+    normalize_path=os.path.join(save_dir,'normalize.h5')
+    non_normalize_path=os.path.join(save_dir,'normalize')
+    if os.path.exists(save_path) and (os.path.exists(normalize_path) or os.path.exists(non_normalize_path)):
+        model=load_model(save_path)
+        normalize_model=None
+        if os.path.exists(normalize_path) and not os.path.exists(non_normalize_path):
+            normalize_model=load_model(normalize_path)
+        return model,normalize_model
+    
+    model=load_model(origin_model_path,custom_objects=ak.CUSTOM_OBJECTS)
+    pass_sign=True
+    tmp_weight_list=[]
+    
+    normalize_model=tf.keras.Sequential()
+    
+    for i in range(len(model.layers)):
+        if 'normaliz' in model.layers[i].name:
+            normalize_model.add(model.layers[i])
+        if pass_sign and not hasattr(model.layers[i],'layers'):
+            continue
+        if not pass_sign:
+            new_config=copy.deepcopy(model.layers[i].get_config())
+            outputs=model.layers[i].__class__(**new_config)(outputs)
+            tmp_weight=model.layers[i].get_weights()
+            if tmp_weight!=[]:
+                tmp_weight_list.append((layer_length,tmp_weight))
+            layer_length+=1
+            continue
+        pass_sign=False
+        new_model=model.layers[i]
+        new_model.layers.pop(0)
+        inputs=new_model.inputs[0]
+        outputs=new_model.outputs[0]
+        layer_length=len(new_model.layers)
+        print(1)
+    new_model_1 = Model(inputs, outputs)
+
+    for tmpw in tmp_weight_list:
+        new_model_1.layers[tmpw[0]].set_weights(tmpw[1])
+        
+    new_model_1.compile(optimizer=model.optimizer,loss=model.loss,metrics=['accuracy'])
+    new_model_1.save(save_path)
+    if normalize_model.layers==[]:
+        normalize_model=None
+    
+    return new_model_1,normalize_model
+
+
+def onnx_convert(model_path,save_dir):
+    import keras2onnx
+    from tensorflow.keras.models import load_model
+    import autokeras as ak
+    import onnx
+
+    # try:
+    #     model=load_model(model_path)
+    # except:
+    if isinstance(model_path,str):
+        model=load_model(model_path,custom_objects=ak.CUSTOM_OBJECTS)
+    else:
+        model=model_path # the input variable model_path can be the model itself
+    onnx_model = keras2onnx.convert_keras(model,'autokeras')
+    onnx_path=os.path.join(save_dir,'best_model.onnx')
+    onnx.save_model(onnx_model, onnx_path)
+    # os._exit(0)# TODO: remove
+    return onnx_path
+
+def torch_convert(model_path,save_dir,dataset):
+    print('========Extracting Main Model...===========')
+    new_model,normalize_model=extract_main_layers(model_path,save_dir)
+    data_save_path=os.path.join(save_dir,'normalized_data.pkl')
+    print('========Saving Dataset...===========')
+    if dataset=='mnist':
+        _,_=mnist_load_data(normalize_model,new_model.input_shape,data_save_path)
+    elif dataset=='cifar10':
+        _,_=cifar10_load_data(normalize_model,new_model.input_shape,data_save_path)
+    else:
+        print('not support dataset')
+    
+    print('========Converting ONNX Model...===========')
+    onnx_path=onnx_convert(new_model,save_dir)
+    torch_path=os.path.join(save_dir,'best_model.pth')
+    # from onnx_pytorch import code_gen
+    # torch_model_dir=os.path.join(save_dir,'torch_model')
+    # os.makedirs(torch_model_dir)
+    # code_gen.gen(onnx_path, torch_model_dir)
+    print('========Converting Pytorch Model...===========')
+    import torch
+    from onnx2torch import convert
+    torch_model_1 = convert(onnx_path)
+    torch.save(torch_model_1, torch_path)
+    print('=============Finished Converting===========')
+    return torch_path
+
+    
+def paddle_convert(model_path,save_dir):
+    print('========Converting ONNX Model...===========')
+    onnx_path=onnx_convert(model_path,save_dir)
+    paddle_model_dir=os.path.join(save_dir,'paddle_model')
+    params_command='source activate tf2.3; x2paddle --framework=onnx --model={} --save_dir={}'
+    print('==========Converting PaddlePaddle Model...============')
+    import subprocess
+    out_path=os.path.join(save_dir,'out')
+    out_file = open(out_path, 'w')
+    out_file.write('logs\n')
+    run_cmd=params_command.format(onnx_path,paddle_model_dir)
+    p=subprocess.Popen(run_cmd, shell=True, stdout=out_file, stderr=out_file, executable='/bin/bash')
+    # try:
+    #     os.system(os_command)
+    # except:
+    #     os._exit(0)
+    print('=============Finished Converting===========')
+    paddle_model_path=os.path.join(paddle_model_dir,'inference_model/model.pdmodel')
+    return paddle_model_path

@@ -375,7 +375,9 @@ class ConvBlock(block_module.Block):
     @staticmethod
     def _get_padding(kernel_size, output_node):
         if all([kernel_size * 2 <= length for length in output_node.shape[1:-1]]):
+            # print('valid')
             return "valid"
+        # print('same')
         return "same"
 
 
