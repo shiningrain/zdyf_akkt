@@ -27,25 +27,25 @@ def run(params):
 
 if __name__=='__main__':
     test_param_1={
-        'block_type':'resnet',
+        'block_type':'vanilla',
         'search':True,
-        'data':'mnist',
-        'save_dir':'./result1',
-        'epoch':10,
+        'data':'cifar',
+        'save_dir':'./result2',
+        'epoch':5,
         'tuner':'greedy',#'dream',
-        'trial':3,
+        'trial':1,
         'gpu':'1',
     }
     test_param_2={
-        'block_type':'resnet',
+        'block_type':'vgg',
         'search':False,
-        'data':'cifar',
-        'save_dir':'./result_r',
+        'data':'mnist',
+        'save_dir':'./result_m_vgg',
         'epoch':2,
-        'param_path':'./param_mnist_resnet.pkl',#./param_mnist_resnet.pkl   ./param_cifar_xception.pkl
+        'param_path':'./param_mnist_vgg.pkl',#./param_mnist_resnet.pkl   ./param_cifar_xception.pkl
         'gpu':'1',
     }
     
     
-    # run(test_param_1)
-    run(test_param_2)
+    run(test_param_1)
+    # run(test_param_2)

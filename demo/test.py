@@ -1,22 +1,22 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import onnxruntime
-import keras2onnx
+# import keras2onnx
 from tensorflow.keras.models import load_model,Model
 import autokeras as ak
-import onnx
+# import onnx
 import numpy as np
 import copy
 import pickle
 
 
-with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/param_cifar_xception.pkl', 'rb') as f:
+with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/result1/best_param.pkl', 'rb') as f:
     log_dict = pickle.load(f)
 
-with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/param_mnist_resnet.pkl', 'rb') as f:
-    log_dict_1 = pickle.load(f)
-print(1)
-with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/param.pkl','wb') as f:
+# with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/param_mnist_resnet.pkl', 'rb') as f:
+#     log_dict_1 = pickle.load(f)
+# print(1)
+with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/param_mnist_vanilla.pkl','wb') as f:
     pickle.dump(log_dict, f)
 print(2)
 # def replace_intermediate_layer_in_keras(model, layer_id, new_layer_list):

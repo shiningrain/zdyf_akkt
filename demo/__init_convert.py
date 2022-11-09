@@ -17,9 +17,9 @@ def run_convert(params):
 
 if __name__=='__main__':
     test_param_3={
-        'model_path':'./result_r/best_model.h5',
-        'target_bk':'torch', #['torch', 'paddle']
-        'save_dir':'./result_cifar_resnet',
+        'model_path':'./result2/best_model.h5',
+        'target_bk':'paddle', #['torch', 'paddle']
+        'save_dir':'./result_c_v-1',
         'dataset':'cifar10', #['mnist','cifar10']
         'gpu':'1',
     }

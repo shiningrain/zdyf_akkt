@@ -1,3 +1,4 @@
+import os
 import paddle
 print(paddle.__version__)
 import paddle.vision.transforms as T
@@ -6,7 +7,7 @@ import paddle
 from paddle.vision.datasets import MNIST
 from paddle.metric import Accuracy
 from paddle.static import InputSpec
-paddle_model_dir='../result/paddle_model'# TODO: you can replace the paddle model path here
+paddle_model_dir='../result_m_v-1/paddle_model'# TODO: you can replace the paddle model path here
 import sys
 sys.path.append(paddle_model_dir)
 from x2paddle_code import ONNXModel
@@ -17,7 +18,7 @@ batch_size=128
 train_dataset = MNIST(mode='train', transform=T.ToTensor())
 test_dataset = MNIST(mode='test', transform=T.ToTensor())
 paddle.disable_static()
-params = paddle.load(os,path.join(os.path.abspath(paddle_model_dir),'model.pdparams'))#TODO: you can replace the paddle model path here
+params = paddle.load(os.path.join(os.path.abspath(paddle_model_dir),'model.pdparams'))#TODO: you can replace the paddle model path here
 model = ONNXModel()
 model.set_dict(params, use_structured_name=True)
 model.eval()

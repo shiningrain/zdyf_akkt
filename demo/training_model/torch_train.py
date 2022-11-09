@@ -14,7 +14,7 @@ import numpy as np
 from torch.utils.data import TensorDataset, DataLoader
 import pickle
 
-with open('../result/1011/new_mnist.pkl', 'rb') as f:# TODO: set the normalized dataset path here
+with open('../result_m_v-1/normalized_data.pkl', 'rb') as f:# TODO: set the normalized dataset path here
     dataset = pickle.load(f)
 
 tensor_x = torch.Tensor(dataset['x_test']) # transform to torch tensor
@@ -26,7 +26,7 @@ my_dataloader = DataLoader(my_dataset,batch_size=1) # create your dataloader
 from tensorflow.keras.models import load_model
 import autokeras as ak
 
-model=torch.load('../result/1011/best_model_onnx2torch.pth').to(device) # TODO: set the torch model path here
+model=torch.load('../result_m_v-1/best_model.pth').to(device) # TODO: set the torch model path here
 
 lossf = nn.CrossEntropyLoss()
 optim = optim.SGD(model.parameters(), lr=0.001)

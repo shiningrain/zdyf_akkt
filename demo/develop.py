@@ -19,8 +19,12 @@ from Deepalchemy import deepalchemy as da
 
 def save_data(x_train,x_test,y_train,y_test,save_path):
     dataset={}
-    dataset['x_train']=x_train.numpy()
-    dataset['x_test']=x_test.numpy()
+    if isinstance(x_test,np.ndarray):
+        dataset['x_train']=x_train
+        dataset['x_test']=x_test
+    else:
+        dataset['x_train']=x_train.numpy() # convert from tensor
+        dataset['x_test']=x_test.numpy()
     dataset['y_train']=y_train
     dataset['y_test']=y_test
     with open(save_path, 'wb') as f:
@@ -83,11 +87,15 @@ def mnist_load_data(normalize_model=None,new_model_input=None,new_data_save_path
     y_test = keras.utils.to_categorical(y_test, 10)
     
     if new_data_save_path!=None:
-        x_train = x_train.reshape(-1, 28,28,1)
-        x_test = x_test.reshape(-1, 28,28,1)
         
-        new_x_test=resize_image(x_test,normalize_model,new_data_save_path,input_shape=new_model_input)
-        new_x_train=resize_image(x_train,normalize_model,new_data_save_path,input_shape=new_model_input)
+        if len(new_model_input)==4:
+            x_train = x_train.reshape(-1, 28,28,1)
+            x_test = x_test.reshape(-1, 28,28,1)
+            new_x_test=resize_image(x_test,normalize_model,new_data_save_path,input_shape=new_model_input)
+            new_x_train=resize_image(x_train,normalize_model,new_data_save_path,input_shape=new_model_input)
+        else:
+            new_x_train=x_train
+            new_x_test=x_test
         save_data(new_x_train,new_x_test,y_train,y_test,new_data_save_path)
     
     return (x_train, y_train), (x_test, y_test)
@@ -258,7 +266,10 @@ def extract_main_layers(origin_model_path,save_dir):
         outputs=new_model.outputs[0]
         layer_length=len(new_model.layers)
         print(1)
-    new_model_1 = Model(inputs, outputs)
+    try:
+        new_model_1 = Model(inputs, outputs)
+    except:
+        new_model_1 = model # for vanilla model
 
     for tmpw in tmp_weight_list:
         new_model_1.layers[tmpw[0]].set_weights(tmpw[1])
@@ -334,10 +345,6 @@ def paddle_convert(model_path,save_dir):
     #     os.system(os_command)
     # except:
     #     os._exit(0)
-<<<<<<< HEAD
     print('=============Finished Converting===========')
-=======
-    print('=============finished converting===========')
->>>>>>> e33055cfc7756215769bc7e6ea0754d966a27f21
     paddle_model_path=os.path.join(paddle_model_dir,'inference_model/model.pdmodel')
     return paddle_model_path
