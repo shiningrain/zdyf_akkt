@@ -1,4 +1,4 @@
-from tensorflow.keras.layers import Conv2D, MaxPool2D, Dropout, Flatten, Dense, BatchNormalization, Activation, Input
+from tensorflow.keras.layers import Conv2D, MaxPool2D, Dropout, Flatten, Dense, BatchNormalization, Activation, Input, DepthwiseConv2D, GlobalAveragePooling2D
 import tensorflow as tf
 import numpy as np
 
@@ -79,6 +79,30 @@ def VGG16():
     return model
 
 
+def VGG(w, block_list, out=None):
+    if out is None:
+        out = 10
+    input = Input(shape=(32, 32, 3))
+    x = input
+    for block_id in range(len(block_list) - 1):
+        for layer_id in range(block_list[block_id]):
+            x = Conv2D(filters=int(np.round(w)), kernel_size=(3, 3), padding='same')(x)
+            x = BatchNormalization()(x)
+            x = Activation('relu')(x)
+        x = MaxPool2D(pool_size=(2, 2), strides=2, padding='same')(x)
+        x = Dropout(0.2)(x)
+        w = w * 2
+
+    x = Flatten()(x)
+    for layer_id in range(block_list[-1] - 1):
+        x = Dense(w, activation='relu')(x)
+        x = Dropout(0.2)(x)
+    outt = Dense(out, activation='softmax')(x)
+    model = tf.keras.Model(inputs=input, outputs=outt, name='vgg' + str(np.sum(block_list)) + '_cifar10_' + str(w))
+
+    return model
+
+
 def ResnetBlock(x, filters, strides=1, residual_path=False):
     res = x
     c1 = Conv2D(filters, (3, 3), strides=strides, padding='same', use_bias=False)(x)
@@ -117,7 +141,7 @@ def resnet18(out_filters, block_list=None, out=None):
     p1 = tf.keras.layers.GlobalAveragePooling2D()(x)
     out = Dense(out, activation='softmax', kernel_regularizer=tf.keras.regularizers.l2())(p1)
 
-    model = tf.keras.Model(inputs=input, outputs=out, name='resnet'+str(np.sum(block_list)*2+2)+'_cifar10_'+str(out_filters))
+    model = tf.keras.Model(inputs=input, outputs=out, name='resnet'+str(np.sum(block_list)*2+2)+'_'+str(out_filters))
     #tf.keras.utils.plot_model(model, 'resnet18.png')
     return model
 
@@ -245,4 +269,41 @@ def Inceptionv3():
 
     model = tf.keras.Model(inputs=input, outputs=y)
     # tf.keras.utils.plot_model(model, 'resnet18.png')
+    return model
+
+
+def depthwise_separable(x, params):
+    # f1/f2 filter size, s1 stride of conv
+    (s1, f2) = params
+    x = DepthwiseConv2D((3, 3), strides=(s1[0], s1[0]), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Activation('relu')(x)
+    x = Conv2D(int(f2[0]), (1, 1), strides=(1, 1), padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Activation('relu')(x)
+    return x
+
+
+def MobileNet(w, block_list, out=None):
+    if out is None:
+        out = 10
+
+    img_input = Input(shape=(32, 32, 3))
+    x = Conv2D(int(32), (3, 3), strides=(2, 2), padding='same')(img_input)
+    x = BatchNormalization()(x)
+    x = Activation('relu')(x)
+
+    for block_id in range(len(block_list) - 1):
+        for layer_id in range(block_list[block_id] - 1):
+            x = depthwise_separable(x, params=[(1,), (w,)])
+        x = depthwise_separable(x, params=[(2,), (2 * w,)])
+        w = w * 2
+    x = depthwise_separable(x, params=[(2,), (w,)])
+    for layer_id in range(block_list[-1] - 1):
+        x = depthwise_separable(x, params=[(1,), (w,)])
+
+    x = GlobalAveragePooling2D()(x)
+    output = Dense(out, activation='softmax')(x)
+
+    model = tf.keras.Model(img_input, output, name='mbnet' + str(np.sum(block_list)) + '_cifar10_' + str(w))
     return model

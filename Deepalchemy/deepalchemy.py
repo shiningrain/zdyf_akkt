@@ -25,14 +25,35 @@ def get_resnet18_n_params(width, deep):
     return n
 
 
-def nparams_to_width(n, wmin, wmax, deep):
+def get_vgg_n_params(width, deep):
+    vgg_dict = eva.build_vgg_dicts()
+    model = myModel.VGG(width, vgg_dict[deep])
+    n = get_model_n_params(model)
+    del model
+    return n
+
+
+def get_mobilenet_n_params(width, deep):
+    vgg_dict = eva.build_vgg_dicts()
+    model = myModel.MobileNet(width, vgg_dict[deep])
+    n = get_model_n_params(model)
+    del model
+    return n
+
+
+def nparams_to_width(model, n, wmin, wmax, deep):
     if deep is None:
         deep = 18
     l = wmin
     r = wmax
     cnt_width = (l + r) / 2
     while np.abs(np.round(l * 2) / 2 - np.round(r * 2) / 2) > 0.5:
-        cnt_n = get_resnet18_n_params(cnt_width, deep)
+        if model == 'resnet':
+            cnt_n = get_resnet18_n_params(cnt_width, deep)
+        if model == 'vgg':
+            cnt_n = get_vgg_n_params(cnt_width, deep)
+        if model == 'mobilenet':
+            cnt_n = get_mobilenet_n_params(cnt_width, deep)
         if cnt_n > n:
             r = cnt_width
         else:
@@ -60,13 +81,25 @@ def stop_OK(current_list, result_dict, nmax):
         return False
 
 
-def bound_examination(nmax, bound_dict, width, deep):
-    if deep < 2:
-        deep = 2
-    elif deep >= 50:
-        deep = 50
+def bound_examination(model, nmax, bound_dict, width, deep):
+    deep = round(deep)
+    if model == 'resnet':
+        if deep < 2:
+            deep = 2
+        elif deep >= 50:
+            deep = 50
+    elif model == 'vgg':
+        if deep < 5:
+            deep = 5
+        elif deep >= 50:
+            deep = 50
+    elif model == 'mobilenet':
+        if deep < 9:
+            deep = 9
+        elif deep >= 49:
+            deep = 49
     if bound_dict.get(deep) is None:
-        bound_dict[deep] = nparams_to_width(nmax, 0, 64, deep)
+        bound_dict[deep] = nparams_to_width(model, nmax, 0, 64, deep)
     if width < 1:
         width = 1
     elif width > bound_dict[deep]:
@@ -75,7 +108,7 @@ def bound_examination(nmax, bound_dict, width, deep):
     return bound_dict, width, deep
 
 
-def NM_search_min(trainfunc, nmax, init_method, iternum):
+def NM_search_min(modeln,trainfunc, nmax, init_method, iternum):
     result_dict = {}
     history = []
     if init_method == 'rand':
@@ -97,27 +130,51 @@ def NM_search_min(trainfunc, nmax, init_method, iternum):
             drand3: nparams_to_width(nmax, 0, 64, drand3),
         }
     elif init_method == 'large':
-        bound_dict = {
-        8: nparams_to_width(nmax, 0, 64, 8),
-        42: nparams_to_width(nmax, 0, 64, 42)
-        }
-        # 初始三角形选定深度为18,18,50 宽度为nmax/3,2nmax/3,nmax/2对应的宽度
-        current_list = [
-            [8, nparams_to_width(nmax / 6, 0, 64, 8)],
-            [8, nparams_to_width(5 * nmax / 6, 0, 64, 8)],
-            [42, nparams_to_width(nmax / 2, 0, 64, 42)],
-        ]
+        if modeln != 'mobilenet':
+            bound_dict = {
+                8: nparams_to_width(modeln, nmax, 0, 64, 8),
+                42: nparams_to_width(modeln, nmax, 0, 64, 42)
+            }
+
+            current_list = [
+                [8, nparams_to_width(modeln, nmax / 6, 0, 64, 8)],
+                [8, nparams_to_width(modeln, 5 * nmax / 6, 0, 64, 8)],
+                [42, nparams_to_width(modeln, nmax / 2, 0, 64, 42)],
+            ]
+            print('init: large')
+        else:
+            bound_dict = {
+                13: nparams_to_width(modeln, nmax, 0, 64, 13),
+                41: nparams_to_width(modeln, nmax, 0, 64, 41)
+            }
+
+            current_list = [
+                [13, nparams_to_width(modeln, nmax / 6, 0, 64, 13)],
+                [13, nparams_to_width(modeln, 5 * nmax / 6, 0, 64, 13)],
+                [41, nparams_to_width(modeln, nmax / 2, 0, 64, 41)],
+            ]
     elif init_method == 'normal':
-        bound_dict = {
-        18: nparams_to_width(nmax, 0, 64, 18),
-        34: nparams_to_width(nmax, 0, 64, 34)
-        }
-        # 初始三角形选定深度为18,18,34 宽度为nmax/3,2nmax/3,nmax/2对应的宽度
-        current_list = [
-            [18, nparams_to_width(nmax / 3, 0, 64, 18)],
-            [18, nparams_to_width(2 * nmax / 3, 0, 64, 18)],
-            [34, nparams_to_width(nmax / 2, 0, 64, 34)],
-        ]
+        if modeln != 'mobilenet':
+            bound_dict = {
+                    18: nparams_to_width(modeln, nmax, 0, 64, 18),
+                    34: nparams_to_width(modeln, nmax, 0, 64, 34)
+                }
+            current_list = [
+                    [18, nparams_to_width(modeln, nmax / 3, 0, 64, 18)],
+                    [18, nparams_to_width(modeln, 2 * nmax / 3, 0, 64, 18)],
+                    [34, nparams_to_width(modeln, nmax / 2, 0, 64, 34)],
+                ]
+        else:
+            bound_dict = {
+                    21: nparams_to_width(modeln, nmax, 0, 64, 21),
+                    35: nparams_to_width(modeln, nmax, 0, 64, 35)
+                }
+
+            current_list = [
+                    [21, nparams_to_width(modeln, nmax / 3, 0, 64, 21)],
+                    [21, nparams_to_width(modeln, 2 * nmax / 3, 0, 64, 21)],
+                    [25, nparams_to_width(modeln, nmax / 2, 0, 64, 35)],
+                ]
     iter = 0
     print('iter ' + str(iter))
     print('Current Singular:')
@@ -131,12 +188,20 @@ def NM_search_min(trainfunc, nmax, init_method, iternum):
         print('iter ' + str(iter))
         current_list = sorted(current_list, key=lambda x: result_dict[tuple(x)])
         history.append([current_list[0],result_dict[tuple(current_list[0])]])
-        deep_o = round((current_list[0][0] + current_list[1][0]) / 4) * 2
+        if modeln == 'resnet':
+            deep_o = round((current_list[0][0] + current_list[1][0]) / 4) * 2
+        elif modeln == 'vgg':
+            deep_o = round((current_list[0][0] + current_list[1][0]) / 2)
+        else:
+            deep_o = round((current_list[0][0] + current_list[1][0]) / 4 + 0.5) * 2 - 1
         width_o = round(current_list[0][1] + current_list[1][1]) / 2
         # result_dict[(deep_o, width_o)] = trainfunc(width_o, deep_o)
 
         deep_r = 2 * deep_o - current_list[2][0]
-        deep_r = round(deep_r / 2) * 2
+        if modeln == 'resnet':
+            deep_r = round(deep_r / 2) * 2
+        elif modeln == 'mobilenet':
+            deep_r = round(deep_r / 2 + 0.5) * 2 - 1
         width_r = 2 * width_o - current_list[2][1]
         bound_dict, width_r, deep_r = bound_examination(nmax, bound_dict, width_r, deep_r)
         r = trainfunc(width_r, deep_r) if result_dict.get((deep_r, width_r)) is None else result_dict[(deep_r, width_r)]
@@ -158,7 +223,10 @@ def NM_search_min(trainfunc, nmax, init_method, iternum):
                 current_list[2] = [deep_r, width_r]
         elif r >= result_dict[tuple(current_list[1])]:
             deep_c = deep_o + 0.5 * (current_list[2][0] - deep_o)
-            deep_c = round(deep_c / 2) * 2
+            if modeln == 'resnet':
+                deep_c = round(deep_c / 2) * 2
+            elif modeln == 'mobilenet':
+                deep_c = round(deep_c / 2 + 0.5) * 2 - 1
             width_c = width_o + 0.5 * (current_list[2][1] - width_o)
             bound_dict, width_c, deep_c = bound_examination(nmax, bound_dict, width_c, deep_c)
             c = trainfunc(width_c, deep_c) if result_dict.get((deep_c, width_c)) is None else result_dict[(deep_c, width_c)]
@@ -169,10 +237,20 @@ def NM_search_min(trainfunc, nmax, init_method, iternum):
             else:
                 print('Shrink')
                 current_list[1][0] = current_list[0][0] + 0.5 * (current_list[1][0] - current_list[0][0])
-                current_list[1][0] = round(current_list[1][0] / 2) * 2
+                if modeln == 'resnet':
+                    current_list[1][0] = round(current_list[1][0] / 2) * 2
+                elif modeln == 'vgg':
+                    current_list[1][0] = round(current_list[1][0])
+                else:
+                    current_list[1][0] = round(current_list[1][0] / 2 + 0.5) * 2 - 1
                 current_list[1][1] = current_list[0][1] + 0.5 * (current_list[1][1] - current_list[0][1])
                 current_list[2][0] = current_list[0][0] + 0.5 * (current_list[2][0] - current_list[0][0])
-                current_list[2][0] = round(current_list[2][0] / 2) * 2
+                if modeln == 'resnet':
+                    current_list[2][0] = round(current_list[2][0] / 2) * 2
+                elif modeln == 'vgg':
+                    current_list[2][0] = round(current_list[2][0])
+                else:
+                    current_list[2][0] = round(current_list[2][0] / 2 + 0.5) * 2 - 1
                 current_list[2][1] = current_list[0][1] + 0.5 * (current_list[2][1] - current_list[0][1])
                 for dp, wth in current_list:
                     if result_dict.get((dp, wth)) is None:
@@ -182,7 +260,13 @@ def NM_search_min(trainfunc, nmax, init_method, iternum):
             print('Deep = ' + str(dp) + ' Width = ' + str(wth) + ' Loss = ' + str(result_dict[(dp, wth)]))
     print(history)
     current_list = sorted(current_list, key=lambda x: result_dict[tuple(x)])
-    return min([k[0] for k in current_list]), max([k[0] for k in current_list]), min([k[1] for k in current_list]), max([k[1] for k in current_list])
+    dmin, dmax, wmin, wmax = min([k[0] for k in current_list]), max([k[0] for k in current_list]), min(
+        [k[1] for k in current_list]), max([k[1] for k in current_list])
+    if dmax == dmin:
+        dmax += 1
+    if wmax == wmin:
+        wmax += 0.5
+    return dmin, dmax, wmin, wmax
     #return current_list[0], result_dict[tuple(current_list[0])]
 
 
@@ -191,12 +275,13 @@ def calc_nmax(n_dataset, imggen_dict):
     return n_max
 
 
-def write_temp(key, data, epochs, **kwargs):
+def write_temp(key, data, model, epochs, **kwargs):
     with open('tempparas.py','w') as f:
         f.write('import tensorflow as tf\n')
         f.write('import datasets\n')
         f.write('import new_evaluation as eva\n')
         f.write('from ..demo.utils.utils_data import *\n')
+        f.write('md = \'' + model + '\'\n')
 
         if key == 0:
             f.write('dmin = '+str(kwargs['dmin'])+'\n')
@@ -206,26 +291,32 @@ def write_temp(key, data, epochs, **kwargs):
         else:
             f.write('d = '+str(kwargs['d'])+'\n')
             f.write('w = '+str(kwargs['w'])+'\n')    
-        if data == 'cifar':
+        if data == 'cifar10':
             f.write('x_train, y_train, x_test, y_test = cifar10_load_data()\n')
         elif data == 'mnist':
             f.write('x_train, y_train, x_test, y_test = mnist_load_data()\n')
+        elif data == 'cifar100':
+            f.write('x_train, y_train, x_test, y_test = datasets.data_prepare_cifar100()\n')
 
         f.write('epochs = '+str(epochs)+'\n')
 
         f.close()
 
 
-def gen_train_function(hpo, dataset, crop, gpu, epochs,data):
+def gen_train_function(hpo, dataset, gpu, modeln,epochs,data):
     x_train, y_train, x_test, y_test = dataset
 
     nmax = y_train.shape[0]
-    use_imggen = 0
-    d0 = 18
-    w0 = nparams_to_width(nmax, 0, 64, 18)
+    yn = y_train.shape[1]
+    #use_imggen = 0
+    if modeln == 'mobilenet':
+        d0 = 21
+    else:
+        d0 = 18
+    w0 = nparams_to_width(modeln,nmax, 0, 64, d0)
 
-    write_temp(1, data, epochs, d=d0, w=w0)
-    os.system('python center.py --gpu='+gpu+' --times=5')
+    write_temp(1, data, modeln,epochs, d=d0, w=w0)
+    os.system('python center.py --gpu='+gpu+' --times=5 --model='+modeln)
     cdict = np.load('./center.npy',allow_pickle=True)[()]
     bs = cdict['batch_size']
     lr = cdict['learning_rate']
@@ -233,18 +324,32 @@ def gen_train_function(hpo, dataset, crop, gpu, epochs,data):
     def trainfunc(width, deep):
         if deep is None:
             deep = 18
-        model = myModel.resnet18(width, eva.build_resnet_dicts()[deep])
+        if modeln == 'resnet':
+            model = myModel.resnet18(width, eva.build_resnet_dicts()[deep], out=yn)
+        elif modeln == 'vgg':
+            model = myModel.VGG(width, eva.build_vgg_dicts()[deep], out=yn)
+        elif modeln == 'mobilenet':
+            model = myModel.MobileNet(width, eva.build_mobilenet_dicts()[deep], out=yn)
         model, acc, vacc, loss, vloss = eva.train_with_hypers(model, x_train, y_train, x_test, y_test, bs, lr, epochs, opname)
         return vloss[-1]
     
     def trainfunc_hpo(dmin, dmax, wmin, wmax):
 
         write_temp(0, data, epochs, dmin=dmin, dmax=dmax, wmin=wmin, wmax=wmax)
-        os.system('python domodelhpo.py --gpu='+gpu+' --times=5')
+        os.system('python domodelhpo.py --gpu='+gpu+' --times=5 --model='+modeln)
         valloss = np.load('./data/best.npy')
         return valloss
     return trainfunc if not hpo else trainfunc_hpo, nmax
 
 
+def deepalchemy(gpu,modelname,dataset,data,epochs,init,iternum):
+    time0 = time.time()
+    trainfunc, nmax = gen_train_function(False, data, str(gpu), modelname, epochs,dataset)
+    dmin, dmax, wmin, wmax = NM_search_min(modelname, trainfunc, nmax, init, iternum)
+    trainfunc, nmax = gen_train_function(True, data, str(gpu), modelname,epochs,dataset)
+    valloss = trainfunc(dmin, dmax, wmin, wmax)
+    time1 = time.time()
+    print('model vloss： ' + str(valloss))
+    print('time use： ' + str(time1 - time0))
 
 

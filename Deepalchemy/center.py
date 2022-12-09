@@ -1,10 +1,10 @@
 
-from ..Deepalchemy.myModel import resnet18
+from ..Deepalchemy.myModel import resnet18, VGG, MobileNet
 import tensorflow as tf
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas.distributions import choice, uniform
 from hyperas import optim
-from ..Deepalchemy.new_evaluation import build_resnet_dicts
+from ..Deepalchemy.new_evaluation import build_resnet_dicts, build_vgg_dicts, build_mobilenet_dicts
 import numpy as np
 import os
 from tensorflow.keras import datasets
@@ -15,7 +15,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def create_model(deep, width):
     import numpy as np
-    model = resnet18(width, build_resnet_dicts()[deep])
+    if md == 'resnet':
+        model = resnet18(width, build_resnet_dicts()[deep], out=1 + int(max(y_test)))
+    elif md == 'vgg':
+        model = VGG(width, build_vgg_dicts()[deep], out=1 + int(max(y_test)))
+    elif md == 'mobilenet':
+        model = MobileNet(width, build_mobilenet_dicts()[deep], out=1 + int(max(y_test)))
     batch_size = {{choice([64, 128, 256, 512])}}
     
     learning_rate = {{choice([1e-2, 1e-3, 1e-4])}}
@@ -31,13 +36,9 @@ def create_model(deep, width):
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                   metrics=['sparse_categorical_accuracy'])
     ear = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, verbose=0, mode='auto')
-    if imgGen is None:
-        history = model.fit(x_train, y_train, batch_size,
-                            epochs=epochs, validation_data=(x_test, y_test), validation_freq=1
-                            , callbacks=[reduce_lr], verbose=0
-                            )
-    else:
-        history = model.fit_generator(imgGen.flow(x_train, y_train, batch_size),#steps_per_epoch=50000//epochs,
+
+
+    history = model.fit_generator(imgGen.flow(x_train, y_train, batch_size),#steps_per_epoch=50000//epochs,
                             epochs=epochs, validation_data=(x_test, y_test), validation_freq=1
                             , callbacks=[reduce_lr], verbose=0
                             )
@@ -57,9 +58,10 @@ def create_model(deep, width):
 def data():
     from ..Deepalchemy import tempparas
     x_train, y_train, x_test, y_test = tempparas.x_train, tempparas.y_train, tempparas.x_test, tempparas.y_test
-    imgGen = None
+    imgGen = tempparas.imgGen
     width = tempparas.w
     deep = tempparas.d
+    md = tempparas.md
     return x_train, y_train, x_test, y_test, imgGen
 
 
@@ -68,6 +70,7 @@ def parse_args():
 
     parser.add_argument('--gpu',required=True)
     parser.add_argument('--times',required=True)
+    parser.add_argument('--model', default='resnet')
     args = parser.parse_args()
     return args
 

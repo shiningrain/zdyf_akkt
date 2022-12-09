@@ -32,6 +32,48 @@ def build_resnet_dicts():
         resnet_dicts[32+2 * i] = [3, 4, 5 + i, 3]
     return resnet_dicts
 
+def build_mobilenet_dicts():
+    mobilenet_dicts = {
+        9: [1, 1, 1, 1],
+        11: [1, 1, 2, 1],
+        13: [1, 2, 2, 1],
+        15: [2, 2, 2, 1],
+        17: [2, 2, 2, 2],
+        19: [2, 2, 3, 2],
+    }
+    for i in range(20):
+        n = int(i/4)
+        m = np.mod(i,4)
+        mobilenet_dicts[21+2*i]=mobilenet_dicts[19+8*n].copy()
+        for j in range(m+1):
+            mobilenet_dicts[21+2*i][j]+=1
+    return mobilenet_dicts
+
+
+def build_vgg_dicts():
+    vgg_dicts = {
+        2: [1,1,1,1,1],
+        3:[1,1,1,1,1],
+        4:[1,1,1,1,1],
+        5: [1,1,1,1,1],
+        6: [2,1,1,1,1],
+        7: [2,2,1,1,1],
+        8: [2,2,2,1,1],
+        9: [2,2,2,2,1],
+        10: [2,2,2,2,2],
+        11: [2,2,3,2,2],
+        12: [2,2,3,3,2],
+        13: [2,2,3,3,3],
+    }
+    for i in range(36):
+        n = int(i/4)
+        m = np.mod(i,4)
+        vgg_dicts[14+i]=vgg_dicts[13+4*n].copy()
+        for j in range(m+1):
+            vgg_dicts[14+i][j]+=1
+    return vgg_dicts
+
+
 def gen_train(model, x_train, y_train, x_test, y_test, epochs, imgGen=None):
     name = model.name
     reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.3,

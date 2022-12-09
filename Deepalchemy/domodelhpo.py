@@ -1,10 +1,10 @@
 
-from ..Deepalchemy.myModel import resnet18
+from ..Deepalchemy.myModel import resnet18,VGG,MobileNet
 import tensorflow as tf
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas.distributions import choice, uniform
 from hyperas import optim
-from ..Deepalchemy.new_evaluation import build_resnet_dicts
+from ..Deepalchemy.new_evaluation import build_resnet_dicts,build_vgg_dicts,build_mobilenet_dicts
 import numpy as np
 import os
 from tensorflow.keras import datasets
@@ -16,10 +16,19 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 def create_model(deep, width):
     import numpy as np
     deep = {{uniform(dmin, dmax)}}
-    deep = np.round(deep / 2) * 2
+    if md != 'mobilenet':
+        deep = np.round(deep / 2) * 2
+    else:
+        deep = np.round(deep / 2 + 0.5) * 2 - 1
     width = {{uniform(wmin, wmax)}}
     width = np.round(width * 4) / 4
-    model = resnet18(width, build_resnet_dicts()[deep])
+
+    if md == 'resnet':
+        model = resnet18(width, build_resnet_dicts()[deep], out=1 + int(max(y_test)))
+    elif md == 'vgg':
+        model = VGG(width, build_vgg_dicts()[deep], out=1 + int(max(y_test)))
+    elif md == 'mobilenet':
+        model = MobileNet(width, build_mobilenet_dicts()[deep], out=1 + int(max(y_test)))
     batch_size = {{choice([64, 128, 256, 512])}}
     
     learning_rate = {{choice([1e-2, 1e-3, 1e-4])}}
