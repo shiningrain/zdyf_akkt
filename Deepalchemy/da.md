@@ -1,7 +1,9 @@
 ## DeepAlchemy 接口文档
 
 
-### def deepalchemy(gpu,modelname,dataset,data,epochs,init,iternum)
+### def run(in_dict)
+
+in_dict中内容：
 
 gpu: int值，输入使用的gpu
 

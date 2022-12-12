@@ -342,7 +342,15 @@ def gen_train_function(hpo, dataset, gpu, modeln,epochs,data):
     return trainfunc if not hpo else trainfunc_hpo, nmax
 
 
-def deepalchemy(gpu,modelname,dataset,data,epochs,init,iternum):
+def run(in_dict):
+
+    gpu = in_dict['gpu']
+    modelname = in_dict['modelname']
+    dataset = in_dict['dataset']
+    data = in_dict['data']
+    epochs = in_dict['epochs']
+    init = in_dict['init']
+    iternum = in_dict['iternum']
     time0 = time.time()
     trainfunc, nmax = gen_train_function(False, data, str(gpu), modelname, epochs,dataset)
     dmin, dmax, wmin, wmax = NM_search_min(modelname, trainfunc, nmax, init, iternum)
