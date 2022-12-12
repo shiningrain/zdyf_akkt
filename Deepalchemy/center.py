@@ -1,10 +1,11 @@
-
-from ..Deepalchemy.myModel import resnet18, VGG, MobileNet
+import sys
+sys.path.append(os.path.dirname(__file__))
+from myModel import resnet18, VGG, MobileNet
 import tensorflow as tf
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas.distributions import choice, uniform
 from hyperas import optim
-from ..Deepalchemy.new_evaluation import build_resnet_dicts, build_vgg_dicts, build_mobilenet_dicts
+from new_evaluation import build_resnet_dicts, build_vgg_dicts, build_mobilenet_dicts
 import numpy as np
 import os
 from tensorflow.keras import datasets

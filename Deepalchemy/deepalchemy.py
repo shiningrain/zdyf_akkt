@@ -1,15 +1,15 @@
 import sys
-sys.path.append("..")
-from Deepalchemy import new_evaluation as eva
+sys.path.append(os.path.dirname(__file__))
+import new_evaluation as eva
 import tensorflow as tf
 import numpy as np
 #import myModel
-from Deepalchemy import myModel
+import myModel
 import time
 import os
 import argparse
 import pickle
-
+from ..demo.utils.utils_data import *
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -296,15 +296,20 @@ def write_temp(key, data, model, epochs, **kwargs):
         elif data == 'mnist':
             f.write('x_train, y_train, x_test, y_test = mnist_load_data()\n')
         elif data == 'cifar100':
-            f.write('x_train, y_train, x_test, y_test = datasets.data_prepare_cifar100()\n')
+            f.write('x_train, y_train, x_test, y_test = data_prepare_cifar100()\n')
 
         f.write('epochs = '+str(epochs)+'\n')
 
         f.close()
 
 
-def gen_train_function(hpo, dataset, gpu, modeln,epochs,data):
-    x_train, y_train, x_test, y_test = dataset
+def gen_train_function(hpo,  gpu, modeln,epochs,data):
+    if data == 'cifar10':
+        x_train, y_train, x_test, y_test = cifar10_load_data()
+    elif data == 'mnist':
+        x_train, y_train, x_test, y_test = mnist_load_data()
+    elif data == 'cifar100'
+        x_train, y_train, x_test, y_test = data_prepare_cifar100()
 
     nmax = y_train.shape[0]
     yn = y_train.shape[1]
@@ -347,14 +352,13 @@ def run(in_dict):
     gpu = in_dict['gpu']
     modelname = in_dict['modelname']
     dataset = in_dict['dataset']
-    data = in_dict['data']
     epochs = in_dict['epochs']
     init = in_dict['init']
     iternum = in_dict['iternum']
     time0 = time.time()
-    trainfunc, nmax = gen_train_function(False, data, str(gpu), modelname, epochs,dataset)
+    trainfunc, nmax = gen_train_function(False, str(gpu), modelname, epochs,dataset)
     dmin, dmax, wmin, wmax = NM_search_min(modelname, trainfunc, nmax, init, iternum)
-    trainfunc, nmax = gen_train_function(True, data, str(gpu), modelname,epochs,dataset)
+    trainfunc, nmax = gen_train_function(True, str(gpu), modelname,epochs,dataset)
     valloss = trainfunc(dmin, dmax, wmin, wmax)
     time1 = time.time()
     print('model vloss： ' + str(valloss))
