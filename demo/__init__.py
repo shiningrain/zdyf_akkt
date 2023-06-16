@@ -26,26 +26,28 @@ def run(params):
         
 
 if __name__=='__main__':
-    test_param_1={
-        'block_type':'vgg',
-        'search':True,
-        'data':'mnist',
-        'save_dir':'./result5',
-        'epoch':5,
-        'tuner':'dream',#'dream',
-        'trial':5,
+    # 功能1：搜索模型
+    # test_param_1={
+    #     'block_type':'vgg',
+    #     'search':True,
+    #     'data':'mnist',
+    #     'save_dir':'./result2',
+    #     'epoch':2,
+    #     'tuner':'dream',#'dream',
+    #     'trial':2,
+    #     'gpu':'1',
+    # }    
+    
+    # run(test_param_1)
+    
+    # 功能2：从参数生成模型
+    test_param_2={
+        'block_type':'resnet',
+        'search':False,
+        'data':'cifar',
+        'save_dir':'./result3',
+        'epoch':2,
+        'param_path':'./param_mnist_resnet.pkl',#./param_mnist_resnet.pkl   ./param_cifar_xception.pkl
         'gpu':'1',
     }
-    # test_param_2={
-    #     'block_type':'vgg',
-    #     'search':False,
-    #     'data':'mnist',
-    #     'save_dir':'./result_m_vgg',
-    #     'epoch':2,
-    #     'param_path':'./param_mnist_vgg.pkl',#./param_mnist_resnet.pkl   ./param_cifar_xception.pkl
-    #     'gpu':'1',
-    # }
-    
-    
-    run(test_param_1)
-    # run(test_param_2)
+    run(test_param_2)

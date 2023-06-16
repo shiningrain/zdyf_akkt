@@ -8,7 +8,7 @@
 *.so
 
 # Models #
-# */result*
+*/result*
 *.h5
 *.onnx
 *paddle_*
@@ -44,4 +44,5 @@
 ehthumbs.db
 Thumbs.db
 *.vscode*
-
+*demo/result_c_r*
+*.pyc

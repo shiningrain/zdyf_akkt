@@ -1,6 +1,6 @@
 前端输入接口：dict格式
 
-1. 模型种类'block_type'。['efficient'，'resnet'，'xception'，'vanilla'，'vgg']# 待补充：nasnet
+1. 模型种类'block_type'。['efficient'，'resnet'，'xception'，'vanilla'，'vgg']# 待补充：
 2. 自动化构造模型'search'。自动化根据模型种类构建性能优秀的模型。 True or False
 3. 数据集'data'。（经过增强或者未经增强的数据集，cifar或mnist），str格式，如果是我们自己的数据集的话，请把路径写在这里，到时候我们的功能会从路径里读数据。
 4. 模型存储目录'save_dir'。所有输出和中间结果都会存在这个目录里
@@ -26,8 +26,10 @@ Python 3.6.9           	#3.6.9是考虑和框架测试结合，如果其他人�
 TensorFlow 2.3
 AutoKeras 1.0.12
 Kerastuner 1.0.2
-
-
+keras2onnx 1.7.0  #这里及之后都是模型转换接口所需环境
+onnx 1.11.0
+onnx2torch 1.3.0
+x2paddle 1.3.6
 ===============================================================================================================================
 模型转换接口说明：
 
