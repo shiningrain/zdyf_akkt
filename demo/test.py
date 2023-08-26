@@ -10,7 +10,7 @@ import copy
 import pickle
 
 
-with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/result3/history.pkl', 'rb') as f:
+with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/result2/0-0.97-861a10a6ee20/history.pkl', 'rb') as f:
     log_dict = pickle.load(f)
 
 # with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/param_mnist_resnet.pkl', 'rb') as f:

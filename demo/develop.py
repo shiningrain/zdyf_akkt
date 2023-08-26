@@ -13,8 +13,9 @@ import autokeras as ak
 import pickle
 import tensorflow.keras as keras
 import sys
+import json
 sys.path.append("..")
-from Deepalchemy import deepalchemy as da
+
 
 
 def save_data(x_train,x_test,y_train,y_test,save_path):
@@ -202,6 +203,7 @@ def model_generate(
                 model.save(model_path)
         else:
             #yzx+ deepalchemy
+            from Deepalchemy import deepalchemy as da
             trainfunc, nmax = da.gen_train_function(False, [x_train, y_train, x_test, y_test], False, '0', epoch, data)
             wmin, wmax, dmin, dmax = da.NM_search_min(trainfunc, nmax, 'normal', 4)
 
@@ -228,6 +230,78 @@ def model_generate(
 
 
     print('finish')
+
+def traversalDir_FirstDir(path):
+    tmplist = []
+    if (os.path.exists(path)):
+        files = os.listdir(path)
+        for file1 in files:
+            m = os.path.join(path,file1)
+            if (os.path.isdir(m) and 'image_classifier' not in m):
+                tmplist.append(m)
+    return tmplist
+
+def sort_dir_name(dir_list):
+    dir_name_list=[os.path.basename(d) for d in dir_list]
+    sorted_list=[]
+    count=0
+    stop=False
+    while not stop:
+        stop=True
+        for dir_name in dir_name_list:
+            if dir_name.startswith(str(count)+'-0.'):
+                sorted_list.append(dir_name)
+                stop=False
+                count+=1
+                break
+        # if no dir name reach requirement, return
+    return sorted_list
+
+def update_best_history(best_history,trial_history):
+    if best_history['loss']==[]:
+        best_history['loss'].append(min(trial_history['loss']))
+        best_history['val_loss'].append(min(trial_history['val_loss']))
+        best_history['accuracy'].append(max(trial_history['accuracy']))
+        best_history['val_accuracy'].append(max(trial_history['val_accuracy']))
+    else:
+        best_history['loss'].append(min(min(trial_history['loss']),best_history['loss'][-1]))
+        best_history['val_loss'].append(min(min(trial_history['val_loss']),best_history['val_loss'][-1]))
+        best_history['accuracy'].append(max(max(trial_history['accuracy']),best_history['accuracy'][-1]))
+        best_history['val_accuracy'].append(max(max(trial_history['val_accuracy']),best_history['val_accuracy'][-1]))
+    return best_history
+
+def summarize_result(json_path,save_dir):
+    dir_list=traversalDir_FirstDir(save_dir)
+    dir_name_list=sort_dir_name(dir_list)#[os.path.basename(d) for d in dir_list]
+    # log_path=os.path.join(save_dir,'log.pkl')
+    result={}
+    result['best_model']=os.path.abspath(os.path.join(save_dir,'best_model.h5'))
+    result['best_param']=os.path.abspath(os.path.join(save_dir,'best_param.pkl'))
+    result['trial_history']={}
+    best_history={}
+    best_history['loss']=[]
+    best_history['accuracy']=[]
+    best_history['val_loss']=[]
+    best_history['val_accuracy']=[]
+    
+    # with open(log_path, 'rb') as f:
+    #     log_dict = pickle.load(f)
+    # key_list=list(log_dict.keys())
+    
+    for i in range(len(dir_name_list)):
+        dir_name=dir_name_list[i]
+        tmp_dir=os.path.join(save_dir,dir_name)
+        with open(os.path.join(tmp_dir,'history.pkl'), 'rb') as f:
+            history = pickle.load(f)
+        result['trial_history'][dir_name.split('-')[0]]=history
+        best_history=update_best_history(best_history,history)
+    result['best_history']=best_history
+    
+    with open(json_path, 'w') as fw:
+        fw.write(json.dumps(result,ensure_ascii=False,indent=4,separators=(',',':')))
+    print(f'========Finish! Json result is saved in {json_path}========') 
+            
+    
 
 def extract_main_layers(origin_model_path,save_dir):
     save_path=os.path.join(save_dir,'extract_model.h5')

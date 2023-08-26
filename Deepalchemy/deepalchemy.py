@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.append(os.path.dirname(__file__))
 import new_evaluation as eva
@@ -308,7 +309,7 @@ def gen_train_function(hpo,  gpu, modeln,epochs,data):
         x_train, y_train, x_test, y_test = cifar10_load_data()
     elif data == 'mnist':
         x_train, y_train, x_test, y_test = mnist_load_data()
-    elif data == 'cifar100'
+    elif data == 'cifar100':
         x_train, y_train, x_test, y_test = data_prepare_cifar100()
 
     nmax = y_train.shape[0]
