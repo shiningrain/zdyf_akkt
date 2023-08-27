@@ -7,7 +7,6 @@ import numpy as np
 #import myModel
 import myModel
 import time
-
 import os
 import argparse
 import pickle

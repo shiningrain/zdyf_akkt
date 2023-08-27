@@ -11,7 +11,7 @@
 */result*
 *.h5
 *.onnx
-*paddle_*
+*paddle_model*
 *image_classifier*
 *.normalized_data.pkl
 
@@ -46,3 +46,4 @@ Thumbs.db
 *.vscode*
 *demo/result_c_r*
 *.pyc
+*demo/tmp/*
