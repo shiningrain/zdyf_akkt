@@ -407,7 +407,7 @@ def paddle_convert(model_path,save_dir):
     print('========Converting ONNX Model...===========')
     onnx_path=onnx_convert(model_path,save_dir)
     paddle_model_dir=os.path.join(save_dir,'paddle_model')
-    params_command='source activate tf2.3; x2paddle --framework=onnx --model={} --save_dir={}'
+    params_command='source activate ak2.3; x2paddle --framework=onnx --model={} --save_dir={}'
     print('==========Converting PaddlePaddle Model...============')
     import subprocess
     out_path=os.path.join(save_dir,'out')

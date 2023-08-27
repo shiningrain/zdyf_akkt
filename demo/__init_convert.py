@@ -19,8 +19,8 @@ if __name__=='__main__':
     # 需要先运行init.py得到一个模型，github无法上传较大的模型文件
     test_param_3={
         'model_path':'./result3/best_model.h5',
-        'target_bk':'torch', #可选['torch', 'paddle']
-        'save_dir':'./result_c_r-2',
+        'target_bk':'paddle', #可选['torch', 'paddle']
+        'save_dir':'./result_c_v-4',
         'dataset':'cifar10', #可选['mnist','cifar10']
         'gpu':'1',
     }
