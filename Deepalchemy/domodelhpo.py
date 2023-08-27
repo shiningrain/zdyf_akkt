@@ -28,11 +28,11 @@ def create_model(deep, width):
     width = np.round(width * 4) / 4
 
     if md == 'resnet':
-        model = resnet18(width, build_resnet_dicts()[deep], out=y_train.shape[1])
+        model = resnet18(width, build_resnet_dicts()[deep], out=y_train.shape[1], inp=x_train[0].shape)
     elif md == 'vgg':
-        model = VGG(width, build_vgg_dicts()[deep], out=y_train.shape[1])
+        model = VGG(width, build_vgg_dicts()[deep], out=y_train.shape[1], inp=x_train[0].shape)
     elif md == 'mobilenet':
-        model = MobileNet(width, build_mobilenet_dicts()[deep], out=y_train.shape[1])
+        model = MobileNet(width, build_mobilenet_dicts()[deep], out=y_train.shape[1], inp=x_train[0].shape)
     batch_size = {{choice([64, 128, 256, 512])}}
 
     learning_rate = {{choice([1e-2, 1e-3, 1e-4])}}

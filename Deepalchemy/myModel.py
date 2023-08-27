@@ -84,6 +84,7 @@ def VGG(w, block_list, out=None, inp=None):
         out = 10
     if inp is None:
         inp = (32, 32, 3)
+        
     input = Input(shape=inp)
     x = input
     for block_id in range(len(block_list) - 1):

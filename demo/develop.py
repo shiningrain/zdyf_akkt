@@ -208,10 +208,15 @@ def model_generate(
         else:
             #yzx+ deepalchemy
             from Deepalchemy import deepalchemy as da
-            np.save(x_train, '../xtr.npy')
-            np.save(y_train, '../ytr.npy')
-            np.save(x_test, '../xte.npy')
-            np.save(y_test, '../yte.npy')
+            if len(x_train.shape) == 3:
+                x_train = np.expand_dims(x_train,-1)
+            if len(x_test.shape) == 3:
+                x_test = np.expand_dims(x_test,-1)
+
+            np.save('../xtr.npy',x_train)
+            np.save('../ytr.npy',y_train)
+            np.save('../xte.npy',x_test)
+            np.save('../yte.npy',y_test)
             trainfunc, nmax = da.gen_train_function(False, gpu, block_type, epoch, [x_train, y_train, x_test, y_test])
             wmin, wmax, dmin, dmax = da.NM_search_min(block_type, trainfunc, nmax, init, iter_num)
 
@@ -419,7 +424,7 @@ def paddle_convert(model_path,save_dir):
     print('========Converting ONNX Model...===========')
     onnx_path=onnx_convert(model_path,save_dir)
     paddle_model_dir=os.path.join(save_dir,'paddle_model')
-    params_command='source activate tf2.3; x2paddle --framework=onnx --model={} --save_dir={}'
+    params_command='source activate ak2.3; x2paddle --framework=onnx --model={} --save_dir={}'
     print('==========Converting PaddlePaddle Model...============')
     import subprocess
     out_path=os.path.join(save_dir,'out')

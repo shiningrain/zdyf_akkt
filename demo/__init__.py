@@ -39,9 +39,9 @@ if __name__=='__main__':
         'data':'mnist',
         'save_dir':'./result3',# 包含所有搜索历史文件
         'json_path':'./result3/search_result.json',#搜索历史json文件保存的目录，可以在上一个save_dir中
-        'epoch':2,
-        'tuner':'dream',#'dream',
-        'trial':3,
+        'epoch':1,
+        'tuner':'deepalchemy',#'dream',
+        'trial':None,
         'gpu':'1',
         'init':'normal',
         'iter_num':4,
