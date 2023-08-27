@@ -26,7 +26,7 @@ def ReadAndCheck(dir,string1,list=list_position):
 def file_name(file_dir,target):
     for root,dirs,files in os.walk(file_dir):
         for eachfile in files:
-            eachfile.split('.')[-1]=='py':#):#
+            if eachfile.split('.')[-1]=='py':#):#
             # if (eachfile.split('.')[-1]=='cc' or  eachfile.split('.')[-1]=='cpp' or  eachfile.split('.')[-1]=='cxx' or eachfile.split('.')[-1]=='h'):
                 filename=root+'/'+eachfile
                 ReadAndCheck(filename,target,list_position)
@@ -36,7 +36,7 @@ def file_name(file_dir,target):
     return list_position
 
 #file_name("/data/zxy/pytorch/","pooling_output_shape")
-file_name("/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/Autokeras","pool")
+file_name("/data/zxy/anaconda3/envs/ak_2.3/lib/python3.6/site-packages/onnx2torch/","xy")
 #file_name("/data/zxy/DL_framework/tensorflow-1.14.0/tensorflow","case Padding::SAME")
 #file_name("/data/zxy/anaconda3/envs/py36/lib/python3.6/site-packages/keras","ReLU(")
 fo = open("/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/position.txt", 'w+',encoding='utf-8')
