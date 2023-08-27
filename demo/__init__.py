@@ -14,7 +14,11 @@ def run(params):
             save_dir=params['save_dir'],#结果保存到临时中转文件夹
             epoch=params['epoch'],
             tuner=params['tuner'],
-            trial=params['trial'])
+            trial=params['trial'],
+            gpu=params['gpu'],
+            init=params['init'],
+            iter_num=params['iter_num']
+            )
         
         summarize_result(json_path=params['json_path'],save_dir=params['save_dir'])#临时中转文件的结果在这里处理。
     else:
@@ -39,6 +43,8 @@ if __name__=='__main__':
         'tuner':'dream',#'dream',
         'trial':3,
         'gpu':'1',
+        'init':'normal',
+        'iter_num':4,
     }    
     
     run(test_param_1)

@@ -8,6 +8,7 @@ from hyperas.distributions import choice, uniform
 from hyperas import optim
 from new_evaluation import build_resnet_dicts, build_vgg_dicts, build_mobilenet_dicts
 import numpy as np
+import pickle
 
 from tensorflow.keras import datasets
 from tensorflow.keras.datasets import cifar10
@@ -109,14 +110,30 @@ if __name__ == '__main__':
                                          trials=Trials(),
                                          verbose=False,
                                          return_space=True)
-    valloss = np.load('./data/' + str(name) + '_valloss.npy')[-1]
+    valloss = np.load('./data/' + str(name) + '_valloss.npy')
+    loss = np.load('./data/' + str(name) + '_loss.npy')
+    valacc = np.load('./data/' + str(name) + '_valacc.npy')
+    acc = np.load('./data/' + str(name) + '_acc.npy')
     np.save('./data/best.npy', valloss)
+    history = {
+        'loss': loss,
+        'val_loss': valloss,
+        'accuracy': acc,
+        'val_accuracy': valacc
+    }
+    output = open('../history.pkl', 'wb')
+    pickle.dump(history, output)
+    output.close()
     model = tf.keras.models.load_model('./models/' + str(name) + '.h5')
     model.save("./best.h5")
     
 
-    # print('The best model:')
-    # savedict = {}
-    # for i, hp in enumerate(result):
-    #    print(str(hp) + ':' + str(space[hp].pos_args[result[hp] + 1].obj))
-    #    savedict[hp] = space[hp].pos_args[result[hp] + 1].obj
+    print('The best model:')
+    savedict = {}
+    for i, hp in enumerate(result):
+       print(str(hp) + ':' + str(space[hp].pos_args[result[hp] + 1].obj))
+       savedict[hp] = space[hp].pos_args[result[hp] + 1].obj
+
+    output = open('../best_param.pkl', 'wb')
+    pickle.dump(savedict, output)
+    output.close()
