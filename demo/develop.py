@@ -4,6 +4,7 @@ import time
 import copy
 import numpy as np
 import tensorflow as tf
+import numpy as np
 from tensorflow.keras.datasets import mnist,cifar10
 from tensorflow.keras.models import load_model,Model
 from tensorflow.keras import layers 
@@ -132,6 +133,9 @@ def model_generate(
     epoch=2,
     tuner='greedy',
     trial=1,
+    gpu='0',
+    init='normal',
+    iter_num=4,
     param_path='./param.pkl',
 ):
 
@@ -204,13 +208,18 @@ def model_generate(
         else:
             #yzx+ deepalchemy
             from Deepalchemy import deepalchemy as da
-            trainfunc, nmax = da.gen_train_function(False, [x_train, y_train, x_test, y_test], False, '0', epoch, data)
-            wmin, wmax, dmin, dmax = da.NM_search_min(trainfunc, nmax, 'normal', 4)
+            np.save(x_train, '../xtr.npy')
+            np.save(y_train, '../ytr.npy')
+            np.save(x_test, '../xte.npy')
+            np.save(y_test, '../yte.npy')
+            trainfunc, nmax = da.gen_train_function(False, gpu, block_type, epoch, [x_train, y_train, x_test, y_test])
+            wmin, wmax, dmin, dmax = da.NM_search_min(block_type, trainfunc, nmax, init, iter_num)
 
-            trainfunc, nmax = da.gen_train_function(True, [x_train, y_train, x_test, y_test], False, '0', epoch, data)
+            trainfunc, nmax = da.gen_train_function(True, gpu, block_type, epoch, [x_train, y_train, x_test, y_test])
             model_path = os.path.join(root_path, 'best_model.h5')
             valloss = trainfunc(dmin, dmax, wmin, wmax)
             shutil.copyfile("./best.h5",model_path)
+            shutil.copyfile("../best_param.pkl", os.path.join(root_path, 'best_param.pkl'))
 
     else:
         # DEMO 2
@@ -287,14 +296,17 @@ def summarize_result(json_path,save_dir):
     # with open(log_path, 'rb') as f:
     #     log_dict = pickle.load(f)
     # key_list=list(log_dict.keys())
-    
-    for i in range(len(dir_name_list)):
-        dir_name=dir_name_list[i]
-        tmp_dir=os.path.join(save_dir,dir_name)
-        with open(os.path.join(tmp_dir,'history.pkl'), 'rb') as f:
-            history = pickle.load(f)
-        result['trial_history'][dir_name.split('-')[0]]=history
-        best_history=update_best_history(best_history,history)
+    if os.path.exists('../history.pkl'):
+        with open('../history.pkl', 'rb') as f:
+            best_history = pickle.load(f)
+    else:
+        for i in range(len(dir_name_list)):
+            dir_name=dir_name_list[i]
+            tmp_dir=os.path.join(save_dir,dir_name)
+            with open(os.path.join(tmp_dir,'history.pkl'), 'rb') as f:
+                history = pickle.load(f)
+            result['trial_history'][dir_name.split('-')[0]]=history
+            best_history=update_best_history(best_history,history)
     result['best_history']=best_history
     
     with open(json_path, 'w') as fw:

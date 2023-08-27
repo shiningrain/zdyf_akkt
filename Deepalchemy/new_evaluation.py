@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import numpy as np
 
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "1"
@@ -147,3 +148,9 @@ def my_random_crop(image):
 
 
 
+def load_data():
+    x_train = np.load('../xtr.npy')
+    y_train = np.load('../ytr.npy')
+    x_test = np.load('../xte.npy')
+    y_test = np.load('../yte.npy')
+    return x_train,y_train,x_test,y_test

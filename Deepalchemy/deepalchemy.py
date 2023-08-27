@@ -10,7 +10,7 @@ import time
 import os
 import argparse
 import pickle
-from utils_data import *
+#from utils_data import *
 
 
 
@@ -280,9 +280,9 @@ def calc_nmax(n_dataset, imggen_dict):
 def write_temp(key, data, model, epochs, **kwargs):
     with open('tempparas.py','w') as f:
         f.write('import tensorflow as tf\n')
-        #f.write('import datasets\n')
+        # f.write('import datasets\n')
         f.write('import new_evaluation as eva\n')
-        f.write('from utils_data import *\n')
+        # f.write('from utils_data import *\n')
         f.write('md = \'' + model + '\'\n')
 
         if key == 0:
@@ -293,26 +293,29 @@ def write_temp(key, data, model, epochs, **kwargs):
         else:
             f.write('d = '+str(kwargs['d'])+'\n')
             f.write('w = '+str(kwargs['w'])+'\n')    
-        if data == 'cifar10':
-            f.write('(x_train, y_train), (x_test, y_test) = cifar10_load_data()\n')
-        elif data == 'mnist':
-            f.write('(x_train, y_train), (x_test, y_test) = mnist_load_data()\n')
-        elif data == 'cifar100':
-            f.write('(x_train, y_train), (x_test, y_test) = data_prepare_cifar100()\n')
-
+        # if data == 'cifar10':
+        #     f.write('(x_train, y_train), (x_test, y_test) = cifar10_load_data()\n')
+        # elif data == 'mnist':
+        #     f.write('(x_train, y_train), (x_test, y_test) = mnist_load_data()\n')
+        # elif data == 'cifar100':
+        #     f.write('(x_train, y_train), (x_test, y_test) = data_prepare_cifar100()\n')
+        f.write('x_train, y_train, x_test, y_test = eva.load_data()\n')
         f.write('epochs = '+str(epochs)+'\n')
 
         f.close()
 
 
 def gen_train_function(hpo,  gpu, modeln,epochs,data):
-    if data == 'cifar10':
-        (x_train, y_train), (x_test, y_test) = cifar10_load_data()
-    elif data == 'mnist':
-        (x_train, y_train), (x_test, y_test) = mnist_load_data()
-    elif data == 'cifar100':
-        (x_train, y_train), (x_test, y_test) = data_prepare_cifar100()
-
+    # if data == 'cifar10':
+    #     (x_train, y_train), (x_test, y_test) = cifar10_load_data()
+    # elif data == 'mnist':
+    #     (x_train, y_train), (x_test, y_test) = mnist_load_data()
+    # elif data == 'cifar100':
+    #     (x_train, y_train), (x_test, y_test) = data_prepare_cifar100()
+    # else:
+    [x_train, y_train, x_test, y_test] = data
+    data = 'data'
+    input_shape = x_train[0].shape
     nmax = y_train.shape[0]
     yn = y_train.shape[1]
     #use_imggen = 0
@@ -323,7 +326,8 @@ def gen_train_function(hpo,  gpu, modeln,epochs,data):
     w0 = nparams_to_width(modeln,nmax, 0, 64, d0)
 
     write_temp(1, data, modeln,epochs, d=d0, w=w0)
-    os.system('python center.py --gpu='+gpu+' --times=5 --model='+modeln)
+    nowdir = os.path.dirname(__file__)
+    os.system('python ' + nowdir + '/center.py --gpu='+gpu+' --times=5 --model='+modeln)
     cdict = np.load('./center.npy',allow_pickle=True)[()]
     bs = cdict['batch_size']
     lr = cdict['learning_rate']
@@ -332,18 +336,18 @@ def gen_train_function(hpo,  gpu, modeln,epochs,data):
         if deep is None:
             deep = 18
         if modeln == 'resnet':
-            model = myModel.resnet18(width, eva.build_resnet_dicts()[deep], out=yn)
+            model = myModel.resnet18(width, eva.build_resnet_dicts()[deep], out=yn, inp=input_shape)
         elif modeln == 'vgg':
-            model = myModel.VGG(width, eva.build_vgg_dicts()[deep], out=yn)
+            model = myModel.VGG(width, eva.build_vgg_dicts()[deep], out=yn, inp=input_shape)
         elif modeln == 'mobilenet':
-            model = myModel.MobileNet(width, eva.build_mobilenet_dicts()[deep], out=yn)
+            model = myModel.MobileNet(width, eva.build_mobilenet_dicts()[deep], out=yn, inp=input_shape)
         model, acc, vacc, loss, vloss = eva.train_with_hypers(model, x_train, y_train, x_test, y_test, bs, lr, epochs, opname)
         return vloss[-1]
     
     def trainfunc_hpo(dmin, dmax, wmin, wmax):
 
         write_temp(0, data, modeln, epochs, dmin=dmin, dmax=dmax, wmin=wmin, wmax=wmax)
-        os.system('python domodelhpo.py --gpu='+gpu+' --times=5 --model='+modeln)
+        os.system('python ' + nowdir + 'domodelhpo.py --gpu='+gpu+' --times=5 --model='+modeln)
         valloss = np.load('./data/best.npy')
         return valloss
     return trainfunc if not hpo else trainfunc_hpo, nmax

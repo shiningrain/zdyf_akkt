@@ -79,10 +79,12 @@ def VGG16():
     return model
 
 
-def VGG(w, block_list, out=None):
+def VGG(w, block_list, out=None, inp=None):
     if out is None:
         out = 10
-    input = Input(shape=(32, 32, 3))
+    if inp is None:
+        inp = (32, 32, 3)
+    input = Input(shape=inp)
     x = input
     for block_id in range(len(block_list) - 1):
         for layer_id in range(block_list[block_id]):
@@ -120,12 +122,14 @@ def ResnetBlock(x, filters, strides=1, residual_path=False):
     return out
 
 
-def resnet18(out_filters, block_list=None, out=None):
+def resnet18(out_filters, block_list=None, out=None, inp=None):
     if block_list is None:
         block_list = [2, 2, 2, 2]
     if out is None:
         out = 10
-    input = Input(shape=(32, 32, 3))
+    if inp is None:
+        inp = (32, 32, 3)
+    input = Input(shape=inp)
     c1 = Conv2D(int(np.round(out_filters)), (3, 3), strides=1, padding='same', use_bias=False)(input)
     b1 = BatchNormalization()(c1)
     x = Activation('relu')(b1)
@@ -284,11 +288,12 @@ def depthwise_separable(x, params):
     return x
 
 
-def MobileNet(w, block_list, out=None):
+def MobileNet(w, block_list, out=None, inp=None):
     if out is None:
         out = 10
-
-    img_input = Input(shape=(32, 32, 3))
+    if inp is None:
+        inp = (32, 32, 3)
+    img_input = Input(shape=inp)
     x = Conv2D(int(32), (3, 3), strides=(2, 2), padding='same')(img_input)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
