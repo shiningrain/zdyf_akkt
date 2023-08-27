@@ -2,10 +2,14 @@ import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import json
 import sys
+import shutil
 sys.path.append(os.path.dirname(__file__))
 
 def run_convert(params):
     os.environ["CUDA_VISIBLE_DEVICES"] = params['gpu']
+    if os.path.exists(params['save_dir']):
+        shutil.rmtree(params['save_dir'])
+    os.makedirs(params['save_dir'])
     if params['target_bk']=='torch':
         from develop import torch_convert
         torch_model_path=torch_convert(params['model_path'],params['save_dir'],params['dataset'])
@@ -20,7 +24,7 @@ if __name__=='__main__':
     test_param_3={
         'model_path':'./result3/best_model.h5',
         'target_bk':'paddle', #可选['torch', 'paddle']
-        'save_dir':'./result_c_v-4',
+        'save_dir':'./result_c_v-4',# ==========该文件夹需要是空文件夹！！每次跑会删除里面的东西！！==============
         'dataset':'cifar10', #可选['mnist','cifar10']
         'gpu':'1',
     }

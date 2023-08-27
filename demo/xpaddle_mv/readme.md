@@ -3,6 +3,7 @@ run the following code to avoid the input shape check of X2paddle and install th
 ```
 pip install -r requirements.txt
 cp -r ./onnx_decoder.py your_env/site-packages/x2paddle/decoder/onnx_decoder.py
+cp -r ./common.py your_env/site-packages/onnx2torch/utils/common.py
 ```
 
 
