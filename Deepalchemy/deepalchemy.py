@@ -1,4 +1,5 @@
 import sys
+import os
 sys.path.append(os.path.dirname(__file__))
 import new_evaluation as eva
 import tensorflow as tf
@@ -6,10 +7,12 @@ import numpy as np
 #import myModel
 import myModel
 import time
+
 import os
 import argparse
 import pickle
-from ..demo.utils.utils_data import *
+from utils_data import *
+
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -203,7 +206,7 @@ def NM_search_min(modeln,trainfunc, nmax, init_method, iternum):
         elif modeln == 'mobilenet':
             deep_r = round(deep_r / 2 + 0.5) * 2 - 1
         width_r = 2 * width_o - current_list[2][1]
-        bound_dict, width_r, deep_r = bound_examination(nmax, bound_dict, width_r, deep_r)
+        bound_dict, width_r, deep_r = bound_examination(modeln, nmax, bound_dict, width_r, deep_r)
         r = trainfunc(width_r, deep_r) if result_dict.get((deep_r, width_r)) is None else result_dict[(deep_r, width_r)]
         result_dict[(deep_r, width_r)] = r
 
@@ -214,7 +217,7 @@ def NM_search_min(modeln,trainfunc, nmax, init_method, iternum):
             print('Expansion')
             deep_e = deep_o + 2 * (deep_r - deep_o)
             width_e = width_o + 2 * (width_r - width_o)
-            bound_dict, width_e, deep_e = bound_examination(nmax, bound_dict, width_e, deep_e)
+            bound_dict, width_e, deep_e = bound_examination(modeln, nmax, bound_dict, width_e, deep_e)
             e = trainfunc(width_e, deep_e) if result_dict.get((deep_e, width_e)) is None else result_dict[(deep_e, width_e)]
             result_dict[(deep_e, width_e)] = e
             if e < r:
@@ -228,7 +231,7 @@ def NM_search_min(modeln,trainfunc, nmax, init_method, iternum):
             elif modeln == 'mobilenet':
                 deep_c = round(deep_c / 2 + 0.5) * 2 - 1
             width_c = width_o + 0.5 * (current_list[2][1] - width_o)
-            bound_dict, width_c, deep_c = bound_examination(nmax, bound_dict, width_c, deep_c)
+            bound_dict, width_c, deep_c = bound_examination(modeln, nmax, bound_dict, width_c, deep_c)
             c = trainfunc(width_c, deep_c) if result_dict.get((deep_c, width_c)) is None else result_dict[(deep_c, width_c)]
             result_dict[(deep_c, width_c)] = c
             if c < result_dict[tuple(current_list[2])]:
@@ -278,9 +281,9 @@ def calc_nmax(n_dataset, imggen_dict):
 def write_temp(key, data, model, epochs, **kwargs):
     with open('tempparas.py','w') as f:
         f.write('import tensorflow as tf\n')
-        f.write('import datasets\n')
+        #f.write('import datasets\n')
         f.write('import new_evaluation as eva\n')
-        f.write('from ..demo.utils.utils_data import *\n')
+        f.write('from utils_data import *\n')
         f.write('md = \'' + model + '\'\n')
 
         if key == 0:
@@ -292,11 +295,11 @@ def write_temp(key, data, model, epochs, **kwargs):
             f.write('d = '+str(kwargs['d'])+'\n')
             f.write('w = '+str(kwargs['w'])+'\n')    
         if data == 'cifar10':
-            f.write('x_train, y_train, x_test, y_test = cifar10_load_data()\n')
+            f.write('(x_train, y_train), (x_test, y_test) = cifar10_load_data()\n')
         elif data == 'mnist':
-            f.write('x_train, y_train, x_test, y_test = mnist_load_data()\n')
+            f.write('(x_train, y_train), (x_test, y_test) = mnist_load_data()\n')
         elif data == 'cifar100':
-            f.write('x_train, y_train, x_test, y_test = data_prepare_cifar100()\n')
+            f.write('(x_train, y_train), (x_test, y_test) = data_prepare_cifar100()\n')
 
         f.write('epochs = '+str(epochs)+'\n')
 
@@ -305,11 +308,11 @@ def write_temp(key, data, model, epochs, **kwargs):
 
 def gen_train_function(hpo,  gpu, modeln,epochs,data):
     if data == 'cifar10':
-        x_train, y_train, x_test, y_test = cifar10_load_data()
+        (x_train, y_train), (x_test, y_test) = cifar10_load_data()
     elif data == 'mnist':
-        x_train, y_train, x_test, y_test = mnist_load_data()
-    elif data == 'cifar100'
-        x_train, y_train, x_test, y_test = data_prepare_cifar100()
+        (x_train, y_train), (x_test, y_test) = mnist_load_data()
+    elif data == 'cifar100':
+        (x_train, y_train), (x_test, y_test) = data_prepare_cifar100()
 
     nmax = y_train.shape[0]
     yn = y_train.shape[1]
@@ -340,7 +343,7 @@ def gen_train_function(hpo,  gpu, modeln,epochs,data):
     
     def trainfunc_hpo(dmin, dmax, wmin, wmax):
 
-        write_temp(0, data, epochs, dmin=dmin, dmax=dmax, wmin=wmin, wmax=wmax)
+        write_temp(0, data, modeln, epochs, dmin=dmin, dmax=dmax, wmin=wmin, wmax=wmax)
         os.system('python domodelhpo.py --gpu='+gpu+' --times=5 --model='+modeln)
         valloss = np.load('./data/best.npy')
         return valloss

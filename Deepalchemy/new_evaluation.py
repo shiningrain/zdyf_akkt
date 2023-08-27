@@ -80,8 +80,8 @@ def gen_train(model, x_train, y_train, x_test, y_test, epochs, imgGen=None):
                                                      patience=10, min_lr=1e-5)
     op = tf.keras.optimizers.Adam(learning_rate=1e-3)
     model.compile(optimizer=op,
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-                  metrics=['sparse_categorical_accuracy'])
+                  loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
+                  metrics=['categorical_accuracy'])
     ear = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, verbose=0, mode='auto')
     if imgGen is None:
         history = model.fit(x_train, y_train, batch_size=128,
@@ -95,8 +95,8 @@ def gen_train(model, x_train, y_train, x_test, y_test, epochs, imgGen=None):
                             )
     loss = history.history['loss']
     val_loss = history.history['val_loss']
-    acc = history.history['sparse_categorical_accuracy']
-    val_acc = history.history['val_sparse_categorical_accuracy']
+    acc = history.history['categorical_accuracy']
+    val_acc = history.history['val_categorical_accuracy']
     model.save("./models/" + name + ".h5")
     np.save('./data/' + name + '_loss', loss)
     np.save('./data/' + name + '_valloss', val_loss)
@@ -111,8 +111,8 @@ def train_with_hypers(model, x_train, y_train, x_test, y_test, bs, lr, epochs, o
                                                      patience=10, min_lr=1e-5)
     op = tf.keras.optimizers.Adam(learning_rate=lr) if opname == 'adam' else tf.keras.optimizers.SGD(learning_rate=lr)
     model.compile(optimizer=op,
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-                  metrics=['sparse_categorical_accuracy'])
+                  loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
+                  metrics=['categorical_accuracy'])
     if imgGen is None:
         history = model.fit(x_train, y_train, batch_size=bs,
                             epochs=epochs, validation_data=(x_test, y_test), validation_freq=1
@@ -125,8 +125,8 @@ def train_with_hypers(model, x_train, y_train, x_test, y_test, bs, lr, epochs, o
                             )
     loss = history.history['loss']
     val_loss = history.history['val_loss']
-    acc = history.history['sparse_categorical_accuracy']
-    val_acc = history.history['val_sparse_categorical_accuracy']
+    acc = history.history['categorical_accuracy']
+    val_acc = history.history['val_categorical_accuracy']
     model.save("./models/" + name + ".h5")
     np.save('./data/' + name + '_loss', loss)
     np.save('./data/' + name + '_valloss', val_loss) 

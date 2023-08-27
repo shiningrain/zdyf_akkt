@@ -10,10 +10,10 @@ from deepalchemy import run
 
 if __name__ == '__main__':
     test_param_1 = {
-        'gpu': 0,
+        'gpu': 1,
         'modelname': 'resnet',
-        'dataset': 'mnist',
-        'epochs': 5,
+        'dataset': 'cifar10',
+        'epochs': 1,
         'init': 'normal',
         'iternum': 4
     }

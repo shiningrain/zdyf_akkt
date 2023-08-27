@@ -1,5 +1,5 @@
 import sys
-
+import os
 sys.path.append(os.path.dirname(__file__))
 from myModel import resnet18, VGG, MobileNet
 import tensorflow as tf
@@ -8,7 +8,7 @@ from hyperas.distributions import choice, uniform
 from hyperas import optim
 from new_evaluation import build_resnet_dicts, build_vgg_dicts, build_mobilenet_dicts
 import numpy as np
-import os
+
 from tensorflow.keras import datasets
 from tensorflow.keras.datasets import cifar10
 import argparse
@@ -27,11 +27,11 @@ def create_model(deep, width):
     width = np.round(width * 4) / 4
 
     if md == 'resnet':
-        model = resnet18(width, build_resnet_dicts()[deep], out=1 + int(max(y_test)))
+        model = resnet18(width, build_resnet_dicts()[deep], out=y_train.shape[1])
     elif md == 'vgg':
-        model = VGG(width, build_vgg_dicts()[deep], out=1 + int(max(y_test)))
+        model = VGG(width, build_vgg_dicts()[deep], out=y_train.shape[1])
     elif md == 'mobilenet':
-        model = MobileNet(width, build_mobilenet_dicts()[deep], out=1 + int(max(y_test)))
+        model = MobileNet(width, build_mobilenet_dicts()[deep], out=y_train.shape[1])
     batch_size = {{choice([64, 128, 256, 512])}}
 
     learning_rate = {{choice([1e-2, 1e-3, 1e-4])}}
@@ -44,13 +44,13 @@ def create_model(deep, width):
     else:
         op = tf.keras.optimizers.SGD(learning_rate)
     model.compile(optimizer=op,
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-                  metrics=['sparse_categorical_accuracy'])
+                  loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
+                  metrics=['categorical_accuracy'])
     ear = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, verbose=0, mode='auto')
 
     history = model.fit(x_train, y_train, batch_size,
                         epochs=epochs, validation_data=(x_test, y_test), validation_freq=1
-                        , callbacks=[reduce_lr], verbose=0
+                        , callbacks=[reduce_lr], verbose=2
                         )
 
     # del(imgGen)
@@ -67,13 +67,14 @@ def create_model(deep, width):
 
 
 def data():
-    from ..Deepalchemy import tempparas
+    import tempparas
     x_train, y_train, x_test, y_test = tempparas.x_train, tempparas.y_train, tempparas.x_test, tempparas.y_test
     epochs = tempparas.epochs
     dmin = tempparas.dmin
     dmax = tempparas.dmax
     wmin = tempparas.wmin
     wmax = tempparas.wmax
+    md = tempparas.md
     return x_train, y_train, x_test, y_test
 
 
@@ -82,6 +83,7 @@ def parse_args():
 
     parser.add_argument('--gpu', required=True)
     parser.add_argument('--times', required=True)
+    parser.add_argument('--model', default='resnet')
     args = parser.parse_args()
     return args
 
@@ -108,9 +110,10 @@ if __name__ == '__main__':
                                          verbose=False,
                                          return_space=True)
     valloss = np.load('./data/' + str(name) + '_valloss.npy')[-1]
-    model = tf.keras.models.load_model('./data/' + str(name) + '.h5')
-    model.save("./best.h5")
     np.save('./data/best.npy', valloss)
+    model = tf.keras.models.load_model('./models/' + str(name) + '.h5')
+    model.save("./best.h5")
+    
 
     # print('The best model:')
     # savedict = {}
