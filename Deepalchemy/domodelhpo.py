@@ -18,6 +18,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def create_model(deep, width):
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
     import numpy as np
     deep = {{uniform(dmin, dmax)}}
     if md != 'mobilenet':
@@ -26,7 +29,8 @@ def create_model(deep, width):
         deep = np.round(deep / 2 + 0.5) * 2 - 1
     width = {{uniform(wmin, wmax)}}
     width = np.round(width * 4) / 4
-
+    print('width='+str(width))
+    print('depth='+str(deep))
     if md == 'resnet':
         model = resnet18(width, build_resnet_dicts()[deep], out=y_train.shape[1], inp=x_train[0].shape)
     elif md == 'vgg':
@@ -56,14 +60,21 @@ def create_model(deep, width):
 
     # del(imgGen)
     name = model.name + '_bs_' + str(batch_size) + '_lr_' + str(learning_rate) + '_epo_' + str(epochs) + '_' + opname
-    val_loss = history.history['val_loss']
     model.save("./models/" + name + ".h5")
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    acc = history.history['categorical_accuracy']
+    val_acc = history.history['val_categorical_accuracy']
+    model.save("./models/" + name + ".h5")
+    np.save('./data/' + name + '_loss', loss)
+    np.save('./data/' + name + '_valloss', val_loss)
+    np.save('./data/' + name + '_acc', acc)
+    np.save('./data/' + name + '_valacc', val_acc)
     del (model)
     # del(x_train)
     # del(y_train)
     # del(x_test)
     # del(y_test)
-    np.save('./data/' + name + '_valloss', val_loss)
     return {'loss': val_loss[-1], 'status': STATUS_OK, 'model': name}
 
 
@@ -82,8 +93,8 @@ def data():
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--gpu', required=True)
-    parser.add_argument('--times', required=True)
+    parser.add_argument('--gpu',default='0')
+    parser.add_argument('--times', default=1)
     parser.add_argument('--model', default='resnet')
     args = parser.parse_args()
     return args
@@ -109,19 +120,20 @@ if __name__ == '__main__':
                                          max_evals=int(t),
                                          trials=Trials(),
                                          verbose=False,
-                                         return_space=True)
+                                         return_space=True,
+                                        keep_temp=False)
     valloss = np.load('./data/' + str(name) + '_valloss.npy')
     loss = np.load('./data/' + str(name) + '_loss.npy')
     valacc = np.load('./data/' + str(name) + '_valacc.npy')
     acc = np.load('./data/' + str(name) + '_acc.npy')
     np.save('./data/best.npy', valloss)
     history = {
-        'loss': loss,
-        'val_loss': valloss,
-        'accuracy': acc,
-        'val_accuracy': valacc
+        'loss': list(loss),
+        'val_loss': list(valloss),
+        'accuracy': list(acc),
+        'val_accuracy': list(valacc)
     }
-    output = open('../history.pkl', 'wb')
+    output = open('../history_da.pkl', 'wb')
     pickle.dump(history, output)
     output.close()
     model = tf.keras.models.load_model('./models/' + str(name) + '.h5')
@@ -131,8 +143,10 @@ if __name__ == '__main__':
     print('The best model:')
     savedict = {}
     for i, hp in enumerate(result):
-       print(str(hp) + ':' + str(space[hp].pos_args[result[hp] + 1].obj))
-       savedict[hp] = space[hp].pos_args[result[hp] + 1].obj
+        if hp in ['deep', 'width']:
+            savedict[hp] = np.round(result[hp])
+        else:
+            savedict[hp] = space[hp].pos_args[result[hp] + 1].obj
 
     output = open('../best_param.pkl', 'wb')
     pickle.dump(savedict, output)

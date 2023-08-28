@@ -16,7 +16,9 @@ import tensorflow.keras as keras
 import sys
 import json
 sys.path.append("..")
-
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 
 def save_data(x_train,x_test,y_train,y_test,save_path):
@@ -301,9 +303,10 @@ def summarize_result(json_path,save_dir):
     # with open(log_path, 'rb') as f:
     #     log_dict = pickle.load(f)
     # key_list=list(log_dict.keys())
-    if os.path.exists('../history.pkl'):
-        with open('../history.pkl', 'rb') as f:
+    if os.path.exists('../history_da.pkl'):
+        with open('../history_da.pkl', 'rb') as f:
             best_history = pickle.load(f)
+        os.remove('../history_da.pkl')
     else:
         for i in range(len(dir_name_list)):
             dir_name=dir_name_list[i]
@@ -312,6 +315,7 @@ def summarize_result(json_path,save_dir):
                 history = pickle.load(f)
             result['trial_history'][dir_name.split('-')[0]]=history
             best_history=update_best_history(best_history,history)
+            
     result['best_history']=best_history
     
     with open(json_path, 'w') as fw:

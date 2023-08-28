@@ -85,8 +85,8 @@ def VGG(w, block_list, out=None, inp=None):
     if inp is None:
         inp = (32, 32, 3)
         
-    input = Input(shape=inp)
-    x = input
+    inputt = Input(shape=inp)
+    x = inputt
     for block_id in range(len(block_list) - 1):
         for layer_id in range(block_list[block_id]):
             x = Conv2D(filters=int(np.round(w)), kernel_size=(3, 3), padding='same')(x)
@@ -101,7 +101,7 @@ def VGG(w, block_list, out=None, inp=None):
         x = Dense(w, activation='relu')(x)
         x = Dropout(0.2)(x)
     outt = Dense(out, activation='softmax')(x)
-    model = tf.keras.Model(inputs=input, outputs=outt, name='vgg' + str(np.sum(block_list)) + '_cifar10_' + str(w))
+    model = tf.keras.Model(inputs=inputt, outputs=outt, name='vgg' + str(np.sum(block_list)) + '_cifar10_' + str(w))
 
     return model
 
