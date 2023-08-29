@@ -89,8 +89,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = str(g)
     if not os.path.exists('./data'):
         os.mkdir('./data')
-    if not os.path.exists('./model'):
-        os.mkdir('./model')
+
     gpus = tf.config.experimental.list_physical_devices('GPU')
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)

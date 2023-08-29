@@ -9,7 +9,7 @@ from hyperas import optim
 from new_evaluation import build_resnet_dicts, build_vgg_dicts, build_mobilenet_dicts
 import numpy as np
 import pickle
-
+import shutil
 from tensorflow.keras import datasets
 from tensorflow.keras.datasets import cifar10
 import argparse
@@ -108,8 +108,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = str(g)
     if not os.path.exists('./data'):
         os.mkdir('./data')
-    if not os.path.exists('./model'):
-        os.mkdir('./model')
+
     gpus = tf.config.experimental.list_physical_devices('GPU')
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)
@@ -151,3 +150,6 @@ if __name__ == '__main__':
     output = open('../best_param.pkl', 'wb')
     pickle.dump(savedict, output)
     output.close()
+    os.remove('./tempparas.py')
+    shutil.rmtree('./models')
+    shutil.rmtree('./data')

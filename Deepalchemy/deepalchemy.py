@@ -335,6 +335,7 @@ def gen_train_function(hpo,  gpu, modeln,epochs,data):
         bs = cdict['batch_size']
         lr = cdict['learning_rate']
         opname = cdict['opname']
+        os.remove('./center.npy')
     def trainfunc(width, deep):
         if deep is None:
             deep = 18
