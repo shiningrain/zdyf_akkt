@@ -7,7 +7,7 @@ import paddle
 from paddle.vision.datasets import MNIST
 from paddle.metric import Accuracy
 from paddle.static import InputSpec
-paddle_model_dir='../result_m_v-1/paddle_model'# TODO: you can replace the paddle model path here
+paddle_model_dir='../result_tmp/paddle_model'# TODO: you can replace the paddle model path here
 import sys
 sys.path.append(paddle_model_dir)
 from x2paddle_code import ONNXModel

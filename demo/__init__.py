@@ -32,31 +32,31 @@ def run(params):
         
 
 if __name__=='__main__':
-    # 功能1：搜索模型
-    test_param_1={
-        'block_type':'vgg',
-        'search':True,
-        'data':'mnist',
-        'save_dir':'./result3',# 包含所有搜索历史文件
-        'json_path':'./result3/search_result.json',#搜索历史json文件保存的目录，可以在上一个save_dir中
-        'epoch':2,
-        'tuner':'dream',#'dream',
-        'trial':3,
-        'gpu':'1',
-        'init':'normal',
-        'iter_num':4,
-    }    
-    
-    run(test_param_1)
-    
-    # # 功能2：从参数生成模型
-    # test_param_2={
-    #     'block_type':'resnet',
-    #     'search':False,
+    # # 功能1：搜索模型
+    # test_param_1={
+    #     'block_type':'vgg',
+    #     'search':True,
     #     'data':'cifar',
-    #     'save_dir':'./result3',
-    #     'epoch':2,
-    #     'param_path':'./param_mnist_resnet.pkl',#./param_mnist_resnet.pkl   ./param_cifar_xception.pkl
+    #     'save_dir':'./result-v-c',# 包含所有搜索历史文件
+    #     'json_path':'./result5/search_result.json',#搜索历史json文件保存的目录，可以在上一个save_dir中
+    #     'epoch':5,
+    #     'tuner':'dream',#'dream',
+    #     'trial':10,
     #     'gpu':'1',
-    # }
-    # run(test_param_2)
+    #     'init':'normal',
+    #     'iter_num':4,
+    # }    
+    
+    # run(test_param_1)
+    
+    # 功能2：从参数生成模型
+    test_param_2={
+        'block_type':'vgg',
+        'search':False,
+        'data':'cifar',
+        'save_dir':'./result_tmp1',
+        'epoch':2,
+        'param_path':'./param_mnist_vgg.pkl',#./param_mnist_resnet.pkl   ./param_cifar_xception.pkl
+        'gpu':'1',
+    }
+    run(test_param_2)

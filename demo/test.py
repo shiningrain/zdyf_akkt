@@ -10,13 +10,13 @@ import copy
 import pickle
 
 
-with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/result2/0-0.97-861a10a6ee20/history.pkl', 'rb') as f:
+with open('./demo/param_mnist_resnet.pkl', 'rb') as f:
     log_dict = pickle.load(f)
 
 # with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/param_mnist_resnet.pkl', 'rb') as f:
 #     log_dict_1 = pickle.load(f)
 # print(1)
-with open('/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/result3/best_history.pkl', 'rb') as f:
+with open('./demo/param_mnist_vanilla.pkl', 'rb') as f:
     log_dict_1 = pickle.load(f)
 print(2)
 # def replace_intermediate_layer_in_keras(model, layer_id, new_layer_list):

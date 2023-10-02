@@ -1,0 +1,19 @@
+{
+    "best_model":"/home/Wenjie/project/AI-Platform/output/20230925_1519_d89237e/S20230925_1519_6a9abc5/best_model.h5",
+    "best_param":"/home/Wenjie/project/AI-Platform/output/20230925_1519_d89237e/S20230925_1519_6a9abc5/best_param.pkl",
+    "trial_history":{},
+    "best_history":{
+        "loss":[
+            1.983314037322998
+        ],
+        "val_loss":[
+            1.6862000226974487
+        ],
+        "accuracy":[
+            0.3036400079727173
+        ],
+        "val_accuracy":[
+            0.396699994802475
+        ]
+    }
+}

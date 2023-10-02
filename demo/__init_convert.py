@@ -22,9 +22,9 @@ def run_convert(params):
 if __name__=='__main__':
     # 需要先运行init.py得到一个模型，github无法上传较大的模型文件
     test_param_3={
-        'model_path':'./result3/best_model.h5',
-        'target_bk':'paddle', #可选['torch', 'paddle']
-        'save_dir':'./result_c_v-4',# ==========该文件夹需要是空文件夹！！每次跑会删除里面的东西！！==============
+        'model_path':'/data/zxy/Projects/2020_ZhongDian/ak_test/zdyf_akkt/demo/result-c-v/best_model.h5',
+        'target_bk':'torch', #可选['torch', 'paddle']
+        'save_dir':'./result_tmp',# ==========该文件夹需要是空文件夹！！每次跑会删除里面的东西！！==============
         'dataset':'cifar10', #可选['mnist','cifar10']
         'gpu':'1',
     }

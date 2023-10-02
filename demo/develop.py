@@ -149,13 +149,14 @@ def model_generate(
     os.makedirs(root_path)
     os.makedirs(tmp_dir)
     log_path=os.path.join(root_path,'log.pkl')
-    
+
     if data=='mnist':
         (x_train, y_train), (x_test, y_test) = mnist_load_data()
     elif data=='cifar':
         (x_train, y_train), (x_test, y_test) = cifar10_load_data()
     else:
         (x_train, y_train), (x_test, y_test)=data #TODO: 如果是处理过的数据，需要给出数据路径或者读取方法
+
 
     # DEMO:1
     if search:
@@ -392,12 +393,15 @@ def torch_convert(model_path,save_dir,dataset):
     new_model,normalize_model=extract_main_layers(model_path,save_dir)
     data_save_path=os.path.join(save_dir,'normalized_data.pkl')
     print('========Saving Dataset...===========')
-    if dataset=='mnist':
-        _,_=mnist_load_data(normalize_model,new_model.input_shape,data_save_path)
-    elif dataset=='cifar10':
-        _,_=cifar10_load_data(normalize_model,new_model.input_shape,data_save_path)
-    else:
-        print('not support dataset')
+    try:
+        if dataset=='mnist':
+            _,_=mnist_load_data(normalize_model,new_model.input_shape,data_save_path)
+        elif dataset=='cifar10':
+            _,_=cifar10_load_data(normalize_model,new_model.input_shape,data_save_path)
+        else:
+            print('not support dataset')
+    except:
+        print('not normalize data and model now!!!')
     
     print('========Converting ONNX Model...===========')
     onnx_path=onnx_convert(new_model,save_dir)
