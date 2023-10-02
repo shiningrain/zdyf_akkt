@@ -52,11 +52,13 @@ if __name__=='__main__':
     # 功能2：从参数生成模型
     test_param_2={
         'block_type':'vgg',
-        'search':False,
-        'data':'cifar',
-        'save_dir':'./result_tmp1',
-        'epoch':2,
-        'param_path':'./param_mnist_vgg.pkl',#./param_mnist_resnet.pkl   ./param_cifar_xception.pkl
+        'search':True,
+        'data':'mnist',
+        'save_dir':'./result3',# 包含所有搜索历史文件
+        'json_path':'./result3/search_result.json',#搜索历史json文件保存的目录，可以在上一个save_dir中
+        'epoch':1,
+        'tuner':'deepalchemy',#'dream',
+        'trial':None,
         'gpu':'1',
     }
     run(test_param_2)

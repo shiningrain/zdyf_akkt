@@ -11,7 +11,9 @@ import os
 import argparse
 import pickle
 #from utils_data import *
-
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -324,14 +326,16 @@ def gen_train_function(hpo,  gpu, modeln,epochs,data):
     else:
         d0 = 18
     w0 = nparams_to_width(modeln,nmax, 0, 64, d0)
-
-    write_temp(1, data, modeln,epochs, d=d0, w=w0)
     nowdir = os.path.dirname(__file__)
-    os.system('python ' + nowdir + '/center.py --gpu='+gpu+' --times=5 --model='+modeln)
-    cdict = np.load('./center.npy',allow_pickle=True)[()]
-    bs = cdict['batch_size']
-    lr = cdict['learning_rate']
-    opname = cdict['opname']
+    if not hpo:
+        write_temp(1, data, modeln,epochs, d=d0, w=w0)
+        
+        os.system('python ' + nowdir + '/center.py --gpu='+gpu+' --times=5 --model='+modeln)
+        cdict = np.load('./center.npy',allow_pickle=True)[()]
+        bs = cdict['batch_size']
+        lr = cdict['learning_rate']
+        opname = cdict['opname']
+        os.remove('./center.npy')
     def trainfunc(width, deep):
         if deep is None:
             deep = 18
@@ -347,7 +351,7 @@ def gen_train_function(hpo,  gpu, modeln,epochs,data):
     def trainfunc_hpo(dmin, dmax, wmin, wmax):
 
         write_temp(0, data, modeln, epochs, dmin=dmin, dmax=dmax, wmin=wmin, wmax=wmax)
-        os.system('python ' + nowdir + 'domodelhpo.py --gpu='+gpu+' --times=5 --model='+modeln)
+        os.system('python ' + nowdir + '/domodelhpo.py --gpu='+gpu+' --times=5 --model='+modeln)
         valloss = np.load('./data/best.npy')
         return valloss
     return trainfunc if not hpo else trainfunc_hpo, nmax

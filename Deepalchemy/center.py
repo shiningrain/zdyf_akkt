@@ -16,13 +16,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def create_model(deep, width):
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
     import numpy as np
     if md == 'resnet':
-        model = resnet18(width, build_resnet_dicts()[deep], out=y_train.shape[1])
+        model = resnet18(width, build_resnet_dicts()[deep], out=y_train.shape[1], inp=x_train[0].shape)
     elif md == 'vgg':
-        model = VGG(width, build_vgg_dicts()[deep], out=y_train.shape[1])
+        model = VGG(width, build_vgg_dicts()[deep], out=y_train.shape[1], inp=x_train[0].shape)
     elif md == 'mobilenet':
-        model = MobileNet(width, build_mobilenet_dicts()[deep], out=y_train.shape[1])
+        model = MobileNet(width, build_mobilenet_dicts()[deep], out=y_train.shape[1], inp=x_train[0].shape)
     batch_size = {{choice([64, 128, 256, 512])}}
     
     learning_rate = {{choice([1e-2, 1e-3, 1e-4])}}
@@ -86,8 +89,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = str(g)
     if not os.path.exists('./data'):
         os.mkdir('./data')
-    if not os.path.exists('./model'):
-        os.mkdir('./model')
+
     gpus = tf.config.experimental.list_physical_devices('GPU')
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)
@@ -105,5 +107,5 @@ if __name__ == '__main__':
     for i, hp in enumerate(result):
         print(str(hp) + ':' + str(space[hp].pos_args[result[hp] + 1].obj))
         savedict[hp] = space[hp].pos_args[result[hp] + 1].obj
-    np.save('./center', savedict)
+    np.save('./center.npy', savedict)
     

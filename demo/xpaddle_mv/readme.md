@@ -7,5 +7,4 @@ cp -r ./common.py your_env/site-packages/onnx2torch/utils/common.py
 ```
 
 
-
 please replace the `source activate tf2.3` in this the function `paddle_convert` of [file](../develop.py) to `source activate YOUR_CONDA_ENVS_NAME`.
